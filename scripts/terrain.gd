@@ -15,3 +15,4 @@ func _ready() -> void:
 		for y in range(height):
 			set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
 	
+	
