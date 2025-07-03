@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bjq5y0h53cahl"]
+
+[ext_resource type="PackedScene" uid="uid://bftiol4o8h160" path="res://scenes/camera_controls.tscn" id="1_jmvwu"]
+
+[node name="GameInstance" type="Node"]
+
+[node name="CameraControls" parent="." instance=ExtResource("1_jmvwu")]

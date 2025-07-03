@@ -11,7 +11,6 @@ config_version=5
 [application]
 
 config/name="Strata"
-run/main_scene="uid://cunxhemnrkxt"
 config/features=PackedStringArray("4.4", "Mobile")
 
 [display]
