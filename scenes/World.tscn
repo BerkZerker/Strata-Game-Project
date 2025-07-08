@@ -11,4 +11,4 @@ width = 256
 [node name="Chunks" type="Node" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("2")]
-position = Vector2(298, -323)
+position = Vector2(976, -152)

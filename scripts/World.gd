@@ -1,4 +1,3 @@
-@tool
 extends Node2D
 
 const CHUNK := preload("res://scenes/Chunk.tscn")
@@ -19,9 +18,9 @@ func _ready() -> void:
 	generate_world(_get_noise(randi()))
 
 func _process(delta_time: float) -> void:
-	if(Input.is_action_just_pressed("place")):
+	if(Input.is_action_just_pressed("place_terrain")):
 		place_terrain(get_global_mouse_position(), 50.0, 1.0)
-	if(Input.is_action_just_pressed("break")):
+	if(Input.is_action_just_pressed("destroy_terrain")):
 		explosion(get_global_mouse_position(), 50.0, 1.0)
 
 func _get_noise(noise_seed: int) -> Array:  #priv mark?

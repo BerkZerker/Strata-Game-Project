@@ -1,4 +1,3 @@
-@tool
 extends Node2D
 
 #constant vertices, everything is clockwise
