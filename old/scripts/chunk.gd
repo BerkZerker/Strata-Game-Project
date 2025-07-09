@@ -70,8 +70,8 @@ const VALID_MASK := 0b00010000
 const VISITED_MASK := 0b00100000
 const SPECIAL_MASK := 0b01000000
 
-var chunk_size: int
-var square_size: int
+var chunk_size: int # How many squares the chunks are
+var square_size: int # How big the squares are
 var vertices := []
 var empty_chunk := false
 

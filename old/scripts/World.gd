@@ -4,8 +4,8 @@ const CHUNK := preload("res://scenes/Chunk.tscn")
 const CHUNK_SIZE := 8
 const SQUARE_SIZE := 16
 
-@export var height := 64
-@export var width := 128
+@export var height := 128
+@export var width := 256
 var v_chunks: int = ceil(float(height) / float(CHUNK_SIZE))
 var h_chunks: int = ceil(float(width) / float(CHUNK_SIZE))
 var chunks := []

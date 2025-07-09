@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dt566c2qidrj1"
-path="res://.godot/imported/sand.png-9f865ffb29e91443d533cc74947c6644.ctex"
+uid="uid://bnrv23yc0mu87"
+path="res://.godot/imported/stone.png-005a59f14bd4c49707ae6ded67307167.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sand.png"
-dest_files=["res://.godot/imported/sand.png-9f865ffb29e91443d533cc74947c6644.ctex"]
+source_file="res://assets/textures/stone.png"
+dest_files=["res://.godot/imported/stone.png-005a59f14bd4c49707ae6ded67307167.ctex"]
 
 [params]
 
