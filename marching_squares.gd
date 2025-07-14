@@ -75,7 +75,14 @@ static func generate_vertices(volumetric_data, iso_level: float) -> Array:
 			var point_c = Vector2(x_pos + interp_c * scale, y_pos + scale)
 			var point_d = Vector2(x_pos, y_pos + interp_d * scale)
 
-			var edge_points = [point_a, point_b, point_c, point_d]
+			## edge point locations (not interpolated)
+			var _a = [x_pos + 0.5 * scale , y_pos               ] # 01
+			var _b = [x_pos + scale       , y_pos + 0.5 * scale ] # 12
+			var _c = [x_pos + 0.5 * scale , y_pos + scale       ] # 23
+			var _d = [x_pos               , y_pos + 0.5 * scale ] # 30
+
+			#var edge_points = [point_a, point_b, point_c, point_d]
+			var edge_points = [_a, _b, _c, _d]
 
 			# use our lookup table via helper function to see what shape this is
 			var edges = STATES[get_state(corner_a, corner_b, corner_c, corner_d, iso_level)]
@@ -88,55 +95,9 @@ static func generate_vertices(volumetric_data, iso_level: float) -> Array:
 	return vertices
 
 
-static func bake_polygon(segments: Array, tolerance: float = 0.5) -> Array:
-	# segments is an array of two-element arrays: [[p0, p1], ...]
+# I need to update the generate funciton to use both the un-interpolated data to bake the polygons,
+# but then cross-index it with the interpolated data to give smooth, accurate polygons. 
+# Note that while running the game you can hover to view variable values in the editor.
+static func bake_polygons(segments: Array, tolerance: float = 0.5) -> Array:
 	var polygons = []
-	
-	while segments.size() > 0:
-		var current_seg = segments.pop_front()
-		var poly = [current_seg[0], current_seg[1]]
-		var closed = false
-		var attempts = 0
-		var max_attempts = segments.size() * 2  # Prevent infinite loops
-		
-		while not closed and attempts < max_attempts:
-			attempts += 1
-			var found = false
-			
-			# Look for segments that connect to the current poly's end
-			for i in range(segments.size()):
-				var seg = segments[i]
-				
-				# Check both ends of the segment for connection to either end of poly
-				if poly[-1].distance_to(seg[0]) <= tolerance:
-					poly.append(seg[1])
-					segments.remove_at(i)
-					found = true
-					break
-				elif poly[-1].distance_to(seg[1]) <= tolerance:
-					poly.append(seg[0])
-					segments.remove_at(i)
-					found = true
-					break
-				# Try connecting to start of polygon if end doesn't match
-				elif poly[0].distance_to(seg[0]) <= tolerance:
-					poly.insert(0, seg[1])
-					segments.remove_at(i)
-					found = true
-					break
-				elif poly[0].distance_to(seg[1]) <= tolerance:
-					poly.insert(0, seg[0])
-					segments.remove_at(i)
-					found = true
-					break
-					
-			# Check if polygon is closed
-			if not found or poly[0].distance_to(poly[-1]) <= tolerance:
-				if poly[0].distance_to(poly[-1]) <= tolerance:
-					poly[-1] = poly[0]  # Force exact closure
-				closed = true
-		
-		if poly.size() >= 3:  # Only add valid polygons
-			polygons.append(poly)
-	
 	return polygons
