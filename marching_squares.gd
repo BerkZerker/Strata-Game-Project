@@ -43,12 +43,12 @@ static func get_state(corner_a: float, corner_b: float, corner_c: float, corner_
 
 
 # Returns a PackedVec2Array of points representing the polygon baked from the volumetric data.
-static func march(volumetric_data, iso_level: float) -> PackedVector2Array:
+static func generate_vertices(volumetric_data, iso_level: float) -> Array:
 	
-	var vertices: PackedVector2Array = PackedVector2Array()
-	var width = 9 # grid.width
-	var height = 9 # grid.height
-	var scale = 20 # scales the voxel data to pixels (1 = 1:1 ratio)
+	var vertices = []
+	var width = 49 # grid.width
+	var height = 49 # grid.height
+	var scale = 1 # scales the voxel data to pixels (1 = 1:1 ratio)
 
 	for x in width:
 		for y in height:
@@ -81,7 +81,62 @@ static func march(volumetric_data, iso_level: float) -> PackedVector2Array:
 			var edges = STATES[get_state(corner_a, corner_b, corner_c, corner_d, iso_level)]
 
 			for line in edges:
-				vertices.append(edge_points[line[0]])
-				vertices.append(edge_points[line[1]])
+				var point_1 = edge_points[line[0]]
+				var point_2 = edge_points[line[1]]
+				vertices.append([point_1, point_2])
 
 	return vertices
+
+
+static func bake_polygon(segments: Array, tolerance: float = 0.5) -> Array:
+	# segments is an array of two-element arrays: [[p0, p1], ...]
+	var polygons = []
+	
+	while segments.size() > 0:
+		var current_seg = segments.pop_front()
+		var poly = [current_seg[0], current_seg[1]]
+		var closed = false
+		var attempts = 0
+		var max_attempts = segments.size() * 2  # Prevent infinite loops
+		
+		while not closed and attempts < max_attempts:
+			attempts += 1
+			var found = false
+			
+			# Look for segments that connect to the current poly's end
+			for i in range(segments.size()):
+				var seg = segments[i]
+				
+				# Check both ends of the segment for connection to either end of poly
+				if poly[-1].distance_to(seg[0]) <= tolerance:
+					poly.append(seg[1])
+					segments.remove_at(i)
+					found = true
+					break
+				elif poly[-1].distance_to(seg[1]) <= tolerance:
+					poly.append(seg[0])
+					segments.remove_at(i)
+					found = true
+					break
+				# Try connecting to start of polygon if end doesn't match
+				elif poly[0].distance_to(seg[0]) <= tolerance:
+					poly.insert(0, seg[1])
+					segments.remove_at(i)
+					found = true
+					break
+				elif poly[0].distance_to(seg[1]) <= tolerance:
+					poly.insert(0, seg[0])
+					segments.remove_at(i)
+					found = true
+					break
+					
+			# Check if polygon is closed
+			if not found or poly[0].distance_to(poly[-1]) <= tolerance:
+				if poly[0].distance_to(poly[-1]) <= tolerance:
+					poly[-1] = poly[0]  # Force exact closure
+				closed = true
+		
+		if poly.size() >= 3:  # Only add valid polygons
+			polygons.append(poly)
+	
+	return polygons

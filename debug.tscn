@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://cowjbo5acrt0v"]
+
+[ext_resource type="Script" uid="uid://cig6wdx5gavls" path="res://debug.gd" id="1_1uwqr"]
+
+[node name="Debug" type="TextureRect"]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_1uwqr")
