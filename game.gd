@@ -1,6 +1,6 @@
 extends Node
 
-const MarchingSquares = preload("res://marching_squares.gd")
+const MarchingSquares = preload("res://marching_squares_2.gd")
 
 func _ready() -> void:
 	
@@ -17,8 +17,8 @@ func _ready() -> void:
 		for y in 50:
 			vol_data[x].append(noise.get_noise_2d(x, y))
 	
-	var edges = MarchingSquares.generate_vertices(vol_data, iso_level)
-	var polys = MarchingSquares.bake_polygons(edges, 1.1)
+	#var edges = MarchingSquares.generate_vertices(vol_data, iso_level)
+	var polys = MarchingSquares.generate_polygons(vol_data, iso_level)
 
 	for p in polys:
 		var new_collision_shape = CollisionPolygon2D.new()

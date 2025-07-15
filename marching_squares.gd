@@ -43,15 +43,14 @@ static func get_state(corner_a: float, corner_b: float, corner_c: float, corner_
 
 
 # Returns a PackedVec2Array of points representing the polygon baked from the volumetric data.
-static func generate_vertices(volumetric_data, iso_level: float) -> Array:
+static func generate_vertices(volumetric_data: Array, iso_level: float, scale: int, start_pos: Vector2i, section_size: Vector2i) -> Array:
 	
 	var vertices = []
-	var width = 49 # grid.width
-	var height = 49 # grid.height
-	var scale = 1 # scales the voxel data to pixels (1 = 1:1 ratio)
+	var width = section_size.x # grid.width
+	var height = section_size.y # grid.height
 
-	for x in width:
-		for y in height:
+	for x in range(start_pos.x, width + start_pos.x):
+		for y in range(start_pos.y, height + start_pos.y):
 			
 			# x and y in pixels
 			var x_pos = x * scale
@@ -64,25 +63,25 @@ static func generate_vertices(volumetric_data, iso_level: float) -> Array:
 			var corner_d = volumetric_data[x + 1][y]
 
 			# interpolation factors to used for smoothing
-			var interp_a = find_lerp_factor(corner_a, corner_b, iso_level)
-			var interp_b = find_lerp_factor(corner_b, corner_c, iso_level)
-			var interp_c = find_lerp_factor(corner_d, corner_c, iso_level)
-			var interp_d = find_lerp_factor(corner_a, corner_d, iso_level)
+			var lerp_a = find_lerp_factor(corner_a, corner_b, iso_level)
+			var lerp_b = find_lerp_factor(corner_b, corner_c, iso_level)
+			var lerp_c = find_lerp_factor(corner_d, corner_c, iso_level)
+			var lerp_d = find_lerp_factor(corner_a, corner_d, iso_level)
 
 			# interpolated edge point locations
-			var point_a = Vector2(x_pos + interp_a * scale, y_pos)
-			var point_b = Vector2(x_pos + scale, y_pos + interp_b * scale)
-			var point_c = Vector2(x_pos + interp_c * scale, y_pos + scale)
-			var point_d = Vector2(x_pos, y_pos + interp_d * scale)
+			var interp_a = Vector2(x_pos + lerp_a * scale, y_pos)
+			var interp_b = Vector2(x_pos + scale, y_pos + lerp_b * scale)
+			var interp_c = Vector2(x_pos + lerp_c * scale, y_pos + scale)
+			var interp_d = Vector2(x_pos, y_pos + lerp_d * scale)
 
 			## edge point locations (not interpolated)
-			var _a = [x_pos + 0.5 * scale , y_pos               ] # 01
-			var _b = [x_pos + scale       , y_pos + 0.5 * scale ] # 12
-			var _c = [x_pos + 0.5 * scale , y_pos + scale       ] # 23
-			var _d = [x_pos               , y_pos + 0.5 * scale ] # 30
+			var point_a = [x_pos + 0.5 * scale , y_pos               ] # 01
+			var point_b = [x_pos + scale       , y_pos + 0.5 * scale ] # 12
+			var point_c = [x_pos + 0.5 * scale , y_pos + scale       ] # 23
+			var point_d = [x_pos               , y_pos + 0.5 * scale ] # 30
 
-			#var edge_points = [point_a, point_b, point_c, point_d]
-			var edge_points = [_a, _b, _c, _d]
+			#var edge_points = [interp_a, interp_b, interp_c, interp_d]
+			var edge_points = [point_a, point_b, point_c, point_d]
 
 			# use our lookup table via helper function to see what shape this is
 			var edges = STATES[get_state(corner_a, corner_b, corner_c, corner_d, iso_level)]
@@ -93,11 +92,3 @@ static func generate_vertices(volumetric_data, iso_level: float) -> Array:
 				vertices.append([point_1, point_2])
 
 	return vertices
-
-
-# I need to update the generate funciton to use both the un-interpolated data to bake the polygons,
-# but then cross-index it with the interpolated data to give smooth, accurate polygons. 
-# Note that while running the game you can hover to view variable values in the editor.
-static func bake_polygons(segments: Array, tolerance: float = 0.5) -> Array:
-	var polygons = []
-	return polygons

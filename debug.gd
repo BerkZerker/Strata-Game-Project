@@ -8,7 +8,7 @@ func _ready():
 
 	# 1. Create and configure the noise generator
 	var noise = FastNoiseLite.new()
-	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX	
 	noise.seed = 1
 	noise.frequency = 0.05
 
