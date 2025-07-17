@@ -27,7 +27,5 @@ position = Vector2(254, 259)
 zoom = Vector2(3, 3)
 
 [node name="Debug" parent="Node2D" instance=ExtResource("2_e2o6t")]
-visible = false
-offset_right = 496.0
-offset_bottom = 496.0
+scale = Vector2(10, 10)
 texture = SubResource("ImageTexture_feb5d")

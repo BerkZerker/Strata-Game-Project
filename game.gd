@@ -4,7 +4,7 @@ const MarchingSquares = preload("res://marching_squares.gd")
 
 func _ready() -> void:
 	
-	var iso_level = 0.4
+	var iso_level = 0.5
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	noise.seed = 1
@@ -37,6 +37,5 @@ func _ready() -> void:
 	
 	for p in polygons:
 		var polygon = CollisionPolygon2D.new()
-		print(p)
 		polygon.polygon = p
 		$Node2D/StaticBody2D.add_child(polygon)
