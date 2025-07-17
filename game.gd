@@ -1,10 +1,10 @@
 extends Node
 
-const MarchingSquares = preload("res://marching_squares_2.gd")
+const MarchingSquares = preload("res://marching_squares.gd")
 
 func _ready() -> void:
 	
-	var iso_level = 0.5
+	var iso_level = 0.4
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	noise.seed = 1
@@ -12,15 +12,31 @@ func _ready() -> void:
 	
 	var vol_data = []
 	
-	for x in 50:
+	for x in 51:
 		vol_data.append([])
-		for y in 50:
+		for y in 51:
 			vol_data[x].append(noise.get_noise_2d(x, y))
 	
 	#var edges = MarchingSquares.generate_vertices(vol_data, iso_level)
-	var polys = MarchingSquares.generate_polygons(vol_data, iso_level)
+	var data = MarchingSquares.generate_vertices(vol_data, iso_level, 10, Vector2i(0, 0), Vector2i(50, 50))
+	var vertices = data[0]
+	var polygons = data[1]
 
-	for p in polys:
-		var new_collision_shape = CollisionPolygon2D.new()
-		new_collision_shape.polygon = p
-		$Node2D/StaticBody2D.add_child(new_collision_shape)
+	var line_drawer = $Node2D
+
+	for segment in vertices:
+		if segment.size() == 2:
+			var line = Line2D.new()
+			line.width = 1.5
+			line.default_color = Color(1, 0, 0)
+			var point_1 = Vector2(segment[0][0], segment[0][1])
+			var point_2 = Vector2(segment[1][0], segment[1][1])
+			line.add_point(point_1)
+			line.add_point(point_2)
+			line_drawer.add_child(line)
+	
+	for p in polygons:
+		var polygon = CollisionPolygon2D.new()
+		print(p)
+		polygon.polygon = p
+		$Node2D/StaticBody2D.add_child(polygon)

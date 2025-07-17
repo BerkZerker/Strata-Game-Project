@@ -1,3 +1,4 @@
+@tool
 extends Node
 
 # Lookup table
@@ -46,17 +47,21 @@ static func get_state(corner_a: float, corner_b: float, corner_c: float, corner_
 static func generate_vertices(volumetric_data: Array, iso_level: float, scale: int, start_pos: Vector2i, section_size: Vector2i) -> Array:
 	
 	var vertices = []
+	var polygons = [[]]
+	var hard_polygons = [[]]
 	var width = section_size.x # grid.width
 	var height = section_size.y # grid.height
 
 	for x in range(start_pos.x, width + start_pos.x):
 		for y in range(start_pos.y, height + start_pos.y):
 			
-			# x and y in pixels
-			var x_pos = x * scale
-			var y_pos = y * scale
+			# x and y in pixels - swap them because...
+			# it freaking does not work otherwise.
+			# someone smarter than me can explain
+			var x_pos = y * scale
+			var y_pos = x * scale
 
-			# corner values
+			# corner values from data 
 			var corner_a = volumetric_data[x][y]
 			var corner_b = volumetric_data[x][y + 1]
 			var corner_c = volumetric_data[x + 1][y + 1]
@@ -75,15 +80,17 @@ static func generate_vertices(volumetric_data: Array, iso_level: float, scale: i
 			var interp_d = Vector2(x_pos, y_pos + lerp_d * scale)
 
 			## edge point locations (not interpolated)
-			var point_a = [x_pos + 0.5 * scale , y_pos               ] # 01
-			var point_b = [x_pos + scale       , y_pos + 0.5 * scale ] # 12
-			var point_c = [x_pos + 0.5 * scale , y_pos + scale       ] # 23
-			var point_d = [x_pos               , y_pos + 0.5 * scale ] # 30
+			var point_a = [x_pos + 0.5 * scale, y_pos] # 01
+			var point_b = [x_pos + scale, y_pos + 0.5 * scale] # 12
+			var point_c = [x_pos + 0.5 * scale, y_pos + scale] # 23
+			var point_d = [x_pos, y_pos + 0.5 * scale] # 30
 
-			#var edge_points = [interp_a, interp_b, interp_c, interp_d]
-			var edge_points = [point_a, point_b, point_c, point_d]
+			var edge_points = [interp_a, interp_b, interp_c, interp_d]
+			var hard_points = [point_a, point_b, point_c, point_d] # non interpolated
 
 			# use our lookup table via helper function to see what shape this is
+			# we use the edges to determine which shape to use, but then we need to find 
+			# the actual points we pull from the interpolated edge points
 			var edges = STATES[get_state(corner_a, corner_b, corner_c, corner_d, iso_level)]
 
 			for line in edges:
@@ -91,4 +98,29 @@ static func generate_vertices(volumetric_data: Array, iso_level: float, scale: i
 				var point_2 = edge_points[line[1]]
 				vertices.append([point_1, point_2])
 
-	return vertices
+				var hard_point_1 = hard_points[line[0]]
+				var hard_point_2 = hard_points[line[1]]
+
+				# Polygon stitching logic
+				for i in range(hard_polygons.size()):
+					var poly = hard_polygons[i]
+					if hard_point_1 not in poly and hard_point_2 not in poly:
+						# Neither point is in the polygon, so we create a new one.
+						hard_polygons.append([hard_point_1, hard_point_2])
+						polygons.append([point_1, point_2])
+						break
+					elif hard_point_1 in poly:
+						# Add the second point to the existing polygon.
+						poly.append(hard_point_2)
+						polygons[i].append(point_2)
+						break
+					elif hard_point_2 in poly:
+						# Add the first point to the existing polygon.
+						poly.append(hard_point_1)
+						polygons[i].append(point_1)
+						break
+				# if hard_point_1 not in unmatched_points and hard_point_2 not in unmatched_points:
+				# 	# Make a new polygon.
+				# 	polygons.append([hard_point_1, hard_point_2])
+
+	return [vertices, polygons]

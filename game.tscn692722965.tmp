@@ -21,13 +21,13 @@ script = ExtResource("1_80nbo")
 [node name="Node2D" type="Node2D" parent="."]
 
 [node name="StaticBody2D" type="StaticBody2D" parent="Node2D"]
+position = Vector2(278, 134)
+
+[node name="Debug" parent="Node2D/StaticBody2D" instance=ExtResource("2_e2o6t")]
+offset_right = 10.0
+offset_bottom = 10.0
+texture = SubResource("ImageTexture_feb5d")
 
 [node name="Camera2D" type="Camera2D" parent="Node2D"]
-position = Vector2(254, 259)
-zoom = Vector2(3, 3)
-
-[node name="Debug" parent="Node2D" instance=ExtResource("2_e2o6t")]
-visible = false
-offset_right = 496.0
-offset_bottom = 496.0
-texture = SubResource("ImageTexture_feb5d")
+position = Vector2(303, 159)
+zoom = Vector2(11.055, 11.055)
