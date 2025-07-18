@@ -78,6 +78,10 @@ static func generate_vertices(data: Array, iso_level: float, scale: int, start_p
 
 	#data = pad_2d_array(data, 0.0) # Pad the data to avoid index errors
 
+	# I need to pad the data on all sides and then itterate through from -1 to size + 1
+	# I need to determine how the noise and iso level interact and add some empty space to the padding
+	# This *should* work - then I'll somehow make sure the output is just the size of the chunk I need.
+
 	for x in range(start_pos.x, width + start_pos.x):
 		for y in range(start_pos.y, height + start_pos.y):
 			# x and y in pixels - swap them because... it freaking does not work otherwise.
