@@ -76,7 +76,7 @@ static func generate_vertices(data: Array, iso_level: float, scale: int, start_p
 	var width = section_size.x
 	var height = section_size.y
 
-	data = pad_2d_array(data, 0.0) # Pad the data to avoid index errors
+	#data = pad_2d_array(data, 0.0) # Pad the data to avoid index errors
 
 	for x in range(start_pos.x, width + start_pos.x):
 		for y in range(start_pos.y, height + start_pos.y):

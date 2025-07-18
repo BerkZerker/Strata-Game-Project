@@ -7,7 +7,7 @@ func _ready() -> void:
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	noise.seed = 1
-	noise.frequency = 0.05
+	noise.frequency = 0.07
 	
 	var vol_data = []
 	
