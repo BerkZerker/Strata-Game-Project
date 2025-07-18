@@ -1,14 +1,15 @@
-@tool
 extends TextureRect
 
 func _ready():
 	# Define the size of the noise map
 	var width = 50
 	var height = 50
+	position.x += 10
+	position.y += 10
 
 	# 1. Create and configure the noise generator
 	var noise = FastNoiseLite.new()
-	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX	
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	noise.seed = 1
 	noise.frequency = 0.05
 
@@ -19,8 +20,8 @@ func _ready():
 	for y in range(height):
 		for x in range(width):
 			# Get the noise value for the (x, y) coordinate. It's between -1.0 and 1.0.
-			var noise_value = noise.get_noise_2d(x, y)
-			
+			var noise_value = noise.get_noise_2d(x + 1, y + 1)
+
 			# Map the noise value from [-1, 1] to a grayscale color [0, 1]
 			var color_value = (noise_value + 1.0) / 2.0
 			

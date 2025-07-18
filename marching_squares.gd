@@ -1,4 +1,3 @@
-@tool
 extends Node
 
 # Lookup table
@@ -41,28 +40,23 @@ static func get_state(corner_a: float, corner_b: float, corner_c: float, corner_
 	return state
 
 
-# Returns a PackedVec2Array of points representing the polygon baked from the volumetric data.
-static func generate_vertices(volumetric_data: Array, iso_level: float, scale: int, start_pos: Vector2i, section_size: Vector2i) -> Array:
+# Returns an Array of points representing the verticies calculated from the volumetric data.
+static func generate_vertices(data: Array, iso_level: float, scale: int, start_pos: Vector2i, section_size: Vector2i) -> Array:
 	var vertices = []
-	var polygons = [[]]
-	var hard_polygons = [[]]
-	var unmatched_points = []
-	var width = section_size.x # grid.width
-	var height = section_size.y # grid.height
+	var width = section_size.x
+	var height = section_size.y
 
 	for x in range(start_pos.x, width + start_pos.x):
 		for y in range(start_pos.y, height + start_pos.y):
-			# x and y in pixels - swap them because...
-			# it freaking does not work otherwise.
-			# someone smarter than me can explain
+			# x and y in pixels - swap them because... it freaking does not work otherwise.
 			var x_pos = y * scale
 			var y_pos = x * scale
 
-			# corner values from data 
-			var corner_a = volumetric_data[x][y]
-			var corner_b = volumetric_data[x][y + 1]
-			var corner_c = volumetric_data[x + 1][y + 1]
-			var corner_d = volumetric_data[x + 1][y]
+			# corner values from data
+			var corner_a = data[x][y]
+			var corner_b = data[x][y + 1]
+			var corner_c = data[x + 1][y + 1]
+			var corner_d = data[x + 1][y]
 
 			# interpolation factors to used for smoothing
 			var lerp_a = find_lerp_factor(corner_a, corner_b, iso_level)
@@ -71,19 +65,11 @@ static func generate_vertices(volumetric_data: Array, iso_level: float, scale: i
 			var lerp_d = find_lerp_factor(corner_a, corner_d, iso_level)
 
 			# interpolated edge point locations
-			var interp_a = Vector2(x_pos + lerp_a * scale, y_pos)
-			var interp_b = Vector2(x_pos + scale, y_pos + lerp_b * scale)
-			var interp_c = Vector2(x_pos + lerp_c * scale, y_pos + scale)
-			var interp_d = Vector2(x_pos, y_pos + lerp_d * scale)
-
-			## edge point locations (not interpolated)
-			var point_a = [x_pos + 0.5 * scale, y_pos] # 01
-			var point_b = [x_pos + scale, y_pos + 0.5 * scale] # 12
-			var point_c = [x_pos + 0.5 * scale, y_pos + scale] # 23
-			var point_d = [x_pos, y_pos + 0.5 * scale] # 30
-
-			var edge_points = [interp_a, interp_b, interp_c, interp_d]
-			var hard_points = [point_a, point_b, point_c, point_d] # non interpolated
+			var point_a = Vector2(x_pos + lerp_a * scale, y_pos)
+			var point_b = Vector2(x_pos + scale, y_pos + lerp_b * scale)
+			var point_c = Vector2(x_pos + lerp_c * scale, y_pos + scale)
+			var point_d = Vector2(x_pos, y_pos + lerp_d * scale)
+			var edge_points = [point_a, point_b, point_c, point_d]
 
 			# use our lookup table via helper function to see what shape this is
 			# we use the edges to determine which shape to use, but then we need to find 
@@ -91,45 +77,76 @@ static func generate_vertices(volumetric_data: Array, iso_level: float, scale: i
 			var edges = STATES[get_state(corner_a, corner_b, corner_c, corner_d, iso_level)]
 
 			for line in edges:
+				# Calculate the endpoints of each line
 				var point_1 = edge_points[line[0]]
 				var point_2 = edge_points[line[1]]
 
-				var hard_point_1 = hard_points[line[0]]
-				var hard_point_2 = hard_points[line[1]]
-
-				if hard_point_1 not in unmatched_points: # unmatched points are added
-					unmatched_points.append(hard_point_1)
-				else:
-					unmatched_points.erase(hard_point_1)
-
-				if hard_point_2 not in unmatched_points: # unmatched points are added
-					unmatched_points.append(hard_point_2)
-				else:
-					unmatched_points.erase(hard_point_2)
-
+				# Add the edge to the vertices list
 				vertices.append([point_1, point_2])
 
+	return vertices
 
-				# Polygon stitching logic
-				for i in range(hard_polygons.size()):
-					var poly = hard_polygons[i]
-					if hard_point_1 not in poly and hard_point_2 not in poly:
-						# Neither point is in the polygon, so we create a new one.
-						hard_polygons.append([hard_point_1, hard_point_2])
-						polygons.append([point_1, point_2])
-						break
-					elif hard_point_1 in poly:
-						# Add the second point to the existing polygon.
-						poly.append(hard_point_2)
-						polygons[i].append(point_2)
-						break
-					elif hard_point_2 in poly:
-						# Add the first point to the existing polygon.
-						poly.append(hard_point_1)
-						polygons[i].append(point_1)
-						break
-				# if hard_point_1 not in unmatched_points and hard_point_2 not in unmatched_points:
-				# 	# Make a new polygon.
-				# 	polygons.append([hard_point_1, hard_point_2])
-	print(unmatched_points)
-	return [vertices, polygons]
+
+static func bake_polygons(vertices: Array) -> Array:
+	# Step 1: Build an adjacency list (a "connections" dictionary).
+	# This maps each point to a list of its neighbors. This is much more
+	# efficient for pathfinding than repeatedly searching the original edges array.
+	var connections = {}
+	for edge in vertices:
+		var p1 = edge[0]
+		var p2 = edge[1]
+		
+		# Ensure each point has an entry in the dictionary.
+		if not connections.has(p1):
+			connections[p1] = []
+		if not connections.has(p2):
+			connections[p2] = []
+			
+		# Add the connection in both directions.
+		connections[p1].append(p2)
+		connections[p2].append(p1)
+
+	var polygons = []
+	# Use a dictionary as a "Set" to keep track of points that we have
+	# already assigned to a polygon. This prevents us from processing the
+	# same point multiple times or creating duplicate polygons.
+	var visited_points = {}
+
+	# Step 2: Iterate through every unique point we found.
+	for start_point in connections.keys():
+		# If we have already included this point in a polygon, skip it.
+		if visited_points.has(start_point):
+			continue
+
+		# Found an unvisited point, so it must be the start of a new polygon.
+		# Begin tracing the path from here.
+		var new_poly = PackedVector2Array()
+		var current_point = start_point
+		
+		# Loop until the path can no longer be extended.
+		while true:
+			# Add the current point to our new polygon chain and mark it as visited.
+			new_poly.append(current_point)
+			visited_points[current_point] = true
+			
+			var neighbors = connections[current_point]
+			var next_point = null
+
+			# Find the next connected point that we haven't visited yet.
+			for neighbor in neighbors:
+				if not visited_points.has(neighbor):
+					next_point = neighbor
+					break # Found our next step, so we can stop searching neighbors.
+			
+			# If we couldn't find an unvisited neighbor, it means we've either
+			# completed a closed loop or reached the end of an open line.
+			if next_point == null:
+				break
+			
+			# If we found a next point, make it the current point for the next loop iteration.
+			current_point = next_point
+			
+		# The path tracing is complete for this polygon, so add it to our list.
+		polygons.append(new_poly)
+		
+	return polygons

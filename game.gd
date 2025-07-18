@@ -3,7 +3,6 @@ extends Node
 const MarchingSquares = preload("res://marching_squares.gd")
 
 func _ready() -> void:
-	
 	var iso_level = 0.5
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
@@ -12,15 +11,14 @@ func _ready() -> void:
 	
 	var vol_data = []
 	
-	for x in 51:
+	for x in 52:
 		vol_data.append([])
-		for y in 51:
-			vol_data[x].append(noise.get_noise_2d(x, y))
-	
+		for y in 52:
+			vol_data[x].append(noise.get_noise_2d(x - 1, y  - 1))
+
 	#var edges = MarchingSquares.generate_vertices(vol_data, iso_level)
-	var data = MarchingSquares.generate_vertices(vol_data, iso_level, 10, Vector2i(0, 0), Vector2i(50, 50))
-	var vertices = data[0]
-	var polygons = data[1]
+	var vertices = MarchingSquares.generate_vertices(vol_data, iso_level, 10, Vector2i(1, 1), Vector2i(50, 50))
+	var polygons = MarchingSquares.bake_polygons(vertices)
 
 	var line_drawer = $Node2D
 
