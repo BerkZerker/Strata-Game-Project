@@ -40,11 +40,43 @@ static func get_state(corner_a: float, corner_b: float, corner_c: float, corner_
 	return state
 
 
+# Takes a 2D array and returns a new 2D array with a 1-cell border.
+static func pad_2d_array(source_data: Array, padding_value) -> Array:
+	# Handle cases where the source data might be empty.
+	if source_data.is_empty() or source_data[0].is_empty():
+		return []
+
+	var original_width = source_data.size()
+	var original_height = source_data[0].size()
+
+	var padded_width = original_width + 2
+	var padded_height = original_height + 2
+
+	# --- 1. Create the new, larger grid filled with the padding value ---
+	var padded_data = []
+	for i in range(padded_width):
+		var new_column = []
+		new_column.resize(padded_height)
+		new_column.fill(padding_value)
+		padded_data.append(new_column)
+
+	# --- 2. Copy the original data into the center of the new grid ---
+	for x in range(original_width):
+		for y in range(original_height):
+			# The "+ 1" offset ensures the data is placed in the middle,
+			# leaving a 1-cell border on all sides.
+			padded_data[x + 1][y + 1] = source_data[x][y]
+			
+	return padded_data
+
+
 # Returns an Array of points representing the verticies calculated from the volumetric data.
 static func generate_vertices(data: Array, iso_level: float, scale: int, start_pos: Vector2i, section_size: Vector2i) -> Array:
 	var vertices = []
 	var width = section_size.x
 	var height = section_size.y
+
+	data = pad_2d_array(data, 0.0) # Pad the data to avoid index errors
 
 	for x in range(start_pos.x, width + start_pos.x):
 		for y in range(start_pos.y, height + start_pos.y):
