@@ -79,7 +79,10 @@ static func generate_vertices(data: Array, iso_level: float, scale: int, start_p
 	#data = pad_2d_array(data, 0.0) # Pad the data to avoid index errors
 
 	# I need to pad the data on all sides and then itterate through from -1 to size + 1
+	# I can honestly probably do this with the pad_2d_array function but I need to check the function first.
 	# I need to determine how the noise and iso level interact and add some empty space to the padding
+	# While I'm doing this I also need to go ahead and figure out how to handle different materials
+	# and how to build the different meshes for them. Perhaps ask gemini or reddit about this.
 	# This *should* work - then I'll somehow make sure the output is just the size of the chunk I need.
 
 	for x in range(start_pos.x, width + start_pos.x):
@@ -123,6 +126,7 @@ static func generate_vertices(data: Array, iso_level: float, scale: int, start_p
 	return vertices
 
 
+# Look over this function to see what it does and if it can be cleaned up.
 static func bake_polygons(vertices: Array) -> Array:
 	# Step 1: Build an adjacency list (a "connections" dictionary).
 	# This maps each point to a list of its neighbors. This is much more
