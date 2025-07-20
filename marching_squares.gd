@@ -22,14 +22,14 @@ const STATES = [
 
 
 # Helper function to calculate the iso_level interpolation factor to smooth edges.
-static func find_lerp_factor(corner_a: float, corner_b: float, iso_level: float) -> float:
+func find_lerp_factor(corner_a: float, corner_b: float, iso_level: float) -> float:
 	var val = (iso_level - corner_a) / (corner_b - corner_a)
 	var lerp_factor = max(min(1, val), 0)
 
 	return lerp_factor
 
 # Helper function to return index for the states lookup table
-static func get_state(corner_a: float, corner_b: float, corner_c: float, corner_d: float, iso_level: float) -> int:
+func get_state(corner_a: float, corner_b: float, corner_c: float, corner_d: float, iso_level: float) -> int:
 	var sa = int((corner_a - iso_level) > 0)
 	var sb = int((corner_b - iso_level) > 0)
 	var sc = int((corner_c - iso_level) > 0)
@@ -41,7 +41,7 @@ static func get_state(corner_a: float, corner_b: float, corner_c: float, corner_
 
 
 # Takes a 2D array and returns a new 2D array with a 1-cell border.
-static func pad_2d_array(source_data: Array, padding_value) -> Array:
+func pad_2d_array(source_data: Array, padding_value) -> Array:
 	# Handle cases where the source data might be empty.
 	if source_data.is_empty() or source_data[0].is_empty():
 		return []
@@ -71,12 +71,11 @@ static func pad_2d_array(source_data: Array, padding_value) -> Array:
 
 
 # Returns an Array of points representing the verticies calculated from the volumetric data.
-static func generate_vertices(data: Array, iso_level: float, scale: int, start_pos: Vector2i, section_size: Vector2i) -> Array:
+func generate_vertices(data: Array, iso_level: float, scale: int, chunk_index: Vector2, chunk_size: int) -> Array:
 	var vertices = []
-	var width = section_size.x
-	var height = section_size.y
-
-	#data = pad_2d_array(data, 0.0) # Pad the data to avoid index errors
+	var padded_data = pad_2d_array(data, 0.0) # Pad the data to avoid index errors
+	var width = data.size()
+	var height = data[0].size()
 
 	# I need to pad the data on all sides and then itterate through from -1 to size + 1
 	# I can honestly probably do this with the pad_2d_array function but I need to check the function first.
@@ -85,17 +84,18 @@ static func generate_vertices(data: Array, iso_level: float, scale: int, start_p
 	# and how to build the different meshes for them. Perhaps ask gemini or reddit about this.
 	# This *should* work - then I'll somehow make sure the output is just the size of the chunk I need.
 
-	for x in range(start_pos.x, width + start_pos.x):
-		for y in range(start_pos.y, height + start_pos.y):
+	# Iterate through the data
+	for x in range(width + 1):
+		for y in range(height + 1):
 			# x and y in pixels - swap them because... it freaking does not work otherwise.
-			var x_pos = y * scale
-			var y_pos = x * scale
+			var x_pos = (y + (chunk_index.y * chunk_size)) * scale
+			var y_pos = (x + (chunk_index.x * chunk_size)) * scale
 
 			# corner values from data
-			var corner_a = data[x][y]
-			var corner_b = data[x][y + 1]
-			var corner_c = data[x + 1][y + 1]
-			var corner_d = data[x + 1][y]
+			var corner_a = padded_data[x][y]
+			var corner_b = padded_data[x][y + 1]
+			var corner_c = padded_data[x + 1][y + 1]
+			var corner_d = padded_data[x + 1][y]
 
 			# interpolation factors to used for smoothing
 			var lerp_a = find_lerp_factor(corner_a, corner_b, iso_level)
@@ -111,8 +111,6 @@ static func generate_vertices(data: Array, iso_level: float, scale: int, start_p
 			var edge_points = [point_a, point_b, point_c, point_d]
 
 			# use our lookup table via helper function to see what shape this is
-			# we use the edges to determine which shape to use, but then we need to find 
-			# the actual points we pull from the interpolated edge points
 			var edges = STATES[get_state(corner_a, corner_b, corner_c, corner_d, iso_level)]
 
 			for line in edges:
@@ -126,8 +124,8 @@ static func generate_vertices(data: Array, iso_level: float, scale: int, start_p
 	return vertices
 
 
-# Look over this function to see what it does and if it can be cleaned up.
-static func bake_polygons(vertices: Array) -> Array:
+# Takes an array of vertices and returns an array of polygons.
+func bake_polygons(vertices: Array) -> Array:
 	# Step 1: Build an adjacency list (a "connections" dictionary).
 	# This maps each point to a list of its neighbors. This is much more
 	# efficient for pathfinding than repeatedly searching the original edges array.
