@@ -2,7 +2,7 @@ extends Node
 
 # Function to perform greedy meshing on a 2D array
 # Returns an array of Rect2 objects representing the meshed rectangles
-func mesh(grid: Array, chunk_index: Vector2, chunk_size: int) -> Array:
+func mesh(grid: Array) -> Array:
 	# Get the dimensions of the grid
 	var height = grid.size()
 	if height == 0:
@@ -49,7 +49,7 @@ func mesh(grid: Array, chunk_index: Vector2, chunk_size: int) -> Array:
 					visited[y + dy][x + dx] = true
 			
 			# Store the rectangle information
-			var rectangle = Rect2(x + chunk_index.x * chunk_size, y + chunk_index.y * chunk_size, rect_width, rect_height)
+			var rectangle = Rect2(x, y, rect_width, rect_height)
 			rectangles.append(rectangle)
 	
 	return rectangles
