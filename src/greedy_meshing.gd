@@ -1,1 +1,89 @@
 extends Node
+
+# Function to perform greedy meshing on a 2D array
+# Returns an array of dictionaries containing rect information (position and size)
+func greedy_mesh(grid: Array) -> Array:
+	# Get the dimensions of the grid
+	var height = grid.size()
+	if height == 0:
+		return []
+	var width = grid[0].size()
+	if width == 0:
+		return []
+	
+	# Create visited array to track processed cells
+	var visited = []
+	for y in range(height):
+		visited.append([])
+		for x in range(width):
+			visited[y].append(false)
+	
+	var rectangles = []
+	
+	# Iterate through each cell
+	for y in range(height):
+		for x in range(width):
+			if visited[y][x] or grid[y][x] == 0: # Skip if already visited or empty
+				continue
+			
+			# Find the width of the rectangle
+			var rect_width = 1
+			while x + rect_width < width and grid[y][x + rect_width] == grid[y][x] and not visited[y][x + rect_width]:
+				rect_width += 1
+			
+			# Find the height of the rectangle
+			var rect_height = 1
+			var can_extend = true
+			while y + rect_height < height and can_extend:
+				for dx in range(rect_width):
+					if grid[y + rect_height][x + dx] != grid[y][x] or \
+					   visited[y + rect_height][x + dx]:
+						can_extend = false
+						break
+				if can_extend:
+					rect_height += 1
+			
+			# Mark all cells in the rectangle as visited
+			for dy in range(rect_height):
+				for dx in range(rect_width):
+					visited[y + dy][x + dx] = true
+			
+			# Store the rectangle information
+			rectangles.append({
+				"position": Vector2(x, y),
+				"size": Vector2(rect_width, rect_height),
+				#"type": grid[y][x]
+			})
+	
+	return rectangles
+
+# Function to create collision shapes from the meshed rectangles
+func create_collision_shapes(rectangles: Array, cell_size: float) -> Array:
+	var shapes = []
+	for rect in rectangles:
+		var collision_shape = CollisionShape2D.new()
+		var shape = RectangleShape2D.new()
+		
+		# Set the size of the rectangle shape
+		# Multiply by cell_size to convert from grid coordinates to world coordinates
+		shape.size = rect.size * cell_size
+		
+		# Set the position of the collision shape
+		# Add half the size to center the shape on the grid cells
+		collision_shape.position = (rect.position * cell_size) + (shape.size / 2)
+		
+		collision_shape.shape = shape
+		shapes.append(collision_shape)
+	
+	return shapes
+
+# Function to apply collision shapes to a StaticBody2D
+func apply_collision_shapes(static_body: StaticBody2D, shapes: Array) -> void:
+	# Remove existing collision shapes
+	for child in static_body.get_children():
+		if child is CollisionShape2D:
+			child.queue_free()
+	
+	# Add new collision shapes
+	for shape in shapes:
+		static_body.add_child(shape)
