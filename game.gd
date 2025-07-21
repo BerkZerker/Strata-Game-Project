@@ -28,5 +28,3 @@ func _ready() -> void:
 					chunk[i].append(value)
 			# Add the chunk to the world array
 			world[x].append(chunk)
-	
-	$
