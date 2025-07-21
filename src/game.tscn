@@ -4,6 +4,9 @@
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_80nbo")
+world_width = 1
+world_height = 3
+world_to_pix_scale = 20
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 

@@ -1,8 +1,8 @@
 extends Node
 
 # Function to perform greedy meshing on a 2D array
-# Returns an array of dictionaries containing rect information (position and size)
-func greedy_mesh(grid: Array) -> Array:
+# Returns an array of Rect2 objects representing the meshed rectangles
+func mesh(grid: Array, chunk_index: Vector2, chunk_size: int) -> Array:
 	# Get the dimensions of the grid
 	var height = grid.size()
 	if height == 0:
@@ -49,16 +49,13 @@ func greedy_mesh(grid: Array) -> Array:
 					visited[y + dy][x + dx] = true
 			
 			# Store the rectangle information
-			rectangles.append({
-				"position": Vector2(x, y),
-				"size": Vector2(rect_width, rect_height),
-				#"type": grid[y][x]
-			})
+			var rectangle = Rect2(x + chunk_index.x * chunk_size, y + chunk_index.y * chunk_size, rect_width, rect_height)
+			rectangles.append(rectangle)
 	
 	return rectangles
 
 # Function to create collision shapes from the meshed rectangles
-func create_collision_shapes(rectangles: Array, cell_size: float) -> Array:
+func create_collision_shapes(rectangles: Array, scale: float) -> Array:
 	var shapes = []
 	for rect in rectangles:
 		var collision_shape = CollisionShape2D.new()
@@ -66,24 +63,13 @@ func create_collision_shapes(rectangles: Array, cell_size: float) -> Array:
 		
 		# Set the size of the rectangle shape
 		# Multiply by cell_size to convert from grid coordinates to world coordinates
-		shape.size = rect.size * cell_size
+		shape.size = rect.size * scale
 		
 		# Set the position of the collision shape
 		# Add half the size to center the shape on the grid cells
-		collision_shape.position = (rect.position * cell_size) + (shape.size / 2)
-		
+		collision_shape.position = (rect.position * scale) + (shape.size / 2)
+
 		collision_shape.shape = shape
 		shapes.append(collision_shape)
 	
 	return shapes
-
-# Function to apply collision shapes to a StaticBody2D
-func apply_collision_shapes(static_body: StaticBody2D, shapes: Array) -> void:
-	# Remove existing collision shapes
-	for child in static_body.get_children():
-		if child is CollisionShape2D:
-			child.queue_free()
-	
-	# Add new collision shapes
-	for shape in shapes:
-		static_body.add_child(shape)
