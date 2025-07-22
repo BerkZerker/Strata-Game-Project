@@ -9,6 +9,7 @@ script = ExtResource("1_bwt5w")
 collision_mask = 0
 
 [node name="Area2D" type="Area2D" parent="."]
+visible = false
 collision_layer = 0
 input_pickable = false
 monitorable = false

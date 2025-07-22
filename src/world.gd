@@ -10,10 +10,13 @@ const GreedyMeshing = preload("res://src/greedy_meshing.gd")
 const Chunk = preload("res://src/chunk.tscn")
 
 
+# Runs when the node is added to the scene
 func _ready() -> void:
+	# Generate the terrain data and build the chunks
 	var terrain_data = generate_terrain()
 	var chunks = build_terrain(terrain_data)
 
+	# Add the chunks to the scene
 	for chunk in chunks:
 		add_child(chunk)
 
@@ -23,7 +26,7 @@ func generate_terrain() -> Array:
 	# Set up some noise for the terrain generation
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	noise.seed = 1
+	noise.seed = randi() % 100000
 	noise.frequency = 0.05
 
 	var terrain_data = []
