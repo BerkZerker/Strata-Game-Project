@@ -2,9 +2,9 @@ extends Node2D
 
 # Variables
 var chunk_size = 16
-var world_width = 3
-var world_height = 3
-var world_to_pix_scale = 20
+var world_width = 10
+var world_height = 5
+var world_to_pix_scale = 32
 
 const GreedyMeshing = preload("res://src/greedy_meshing.gd")
 const Chunk = preload("res://src/chunk.tscn")
