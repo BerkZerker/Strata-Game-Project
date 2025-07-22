@@ -1,10 +1,10 @@
 extends Node2D
 
 # Variables
-var chunk_size = 32
-var world_width = 10
-var world_height = 5
-var world_to_pix_scale = 1
+var chunk_size = 16
+var world_width = 3
+var world_height = 3
+var world_to_pix_scale = 20
 
 const GreedyMeshing = preload("res://src/greedy_meshing.gd")
 const Chunk = preload("res://src/chunk.tscn")
@@ -68,6 +68,7 @@ func build_terrain(terrain_data: Array) -> Array:
 			# Set up a new chunk instance
 			var chunk = Chunk.instantiate()
 			chunk.add_collision_shapes(collision_shapes)
+			chunk.setup_area_2d(chunk_size, world_to_pix_scale)
 
 			chunk.position = Vector2(x * chunk_size, y * chunk_size) * world_to_pix_scale
 			chunks.append(chunk)
