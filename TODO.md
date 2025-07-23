@@ -8,4 +8,4 @@
 
 ## Texturing
 
-- Learn shaders :)
+- Learn shaders
