@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dhjepimdy0621"]
 
-[ext_resource type="Script" uid="uid://ctjvxf3jfo7dq" path="res://src/player.gd" id="1_lowyb"]
+[ext_resource type="Script" uid="uid://ctjvxf3jfo7dq" path="res://src/entities/player.gd" id="1_lowyb"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lowyb"]
 
