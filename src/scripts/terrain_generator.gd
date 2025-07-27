@@ -1,0 +1,35 @@
+extends Node
+
+
+# Generates some terrain data based on noise.
+func generate_noise_terrain(world_seed: int, width: int, height: int, chunk_size: int) -> Array:
+	# Set up some noise for the terrain generation
+	var noise = FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	noise.seed = world_seed
+	noise.frequency = 0.05
+
+	var terrain_data = []
+
+	# Generate the world data
+	for x in range(width):
+		terrain_data.append([]) # Add a new row to the world array
+		for y in range(height):
+			# Generate a chunk of noise data
+			var chunk = []
+
+			for i in range(chunk_size):
+				chunk.append([])
+				for j in range(chunk_size):
+					var value = noise.get_noise_2d((x * chunk_size + i), (y * chunk_size + j))
+					# Santize the value to be an int - solid is 1 air is 0
+					if value > 0:
+						value = 1
+					else:
+						value = 0
+					chunk[i].append(value)
+
+			# Add the chunk to the world array
+			terrain_data[x].append(chunk)
+
+	return terrain_data
