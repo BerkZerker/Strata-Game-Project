@@ -36,8 +36,7 @@ func mesh(grid: Array) -> Array:
 			var can_extend = true
 			while y + rect_height < height and can_extend:
 				for dx in range(rect_width):
-					if grid[y + rect_height][x + dx] != grid[y][x] or \
-					   visited[y + rect_height][x + dx]:
+					if grid[y + rect_height][x + dx] != grid[y][x] or visited[y + rect_height][x + dx]:
 						can_extend = false
 						break
 				if can_extend:

@@ -9,6 +9,7 @@ func setup_area_2d(chunk_size: int, world_to_pix_scale: int) -> void:
 	var shape = RectangleShape2D.new()
 	var chunk_padding = 10 # Overlapping padding in blocks. May need tweaking depending on block size.
 
+	# What a mess
 	shape.size = Vector2((chunk_size + chunk_padding) * world_to_pix_scale, (chunk_size + chunk_padding) * world_to_pix_scale)
 	collision_shape.position = Vector2(shape.size.x / 2.0 - chunk_padding / 2.0 * world_to_pix_scale, shape.size.y / 2.0 - chunk_padding / 2.0 * world_to_pix_scale)
 
