@@ -9,16 +9,13 @@ func mesh_terrain(terrain_data: Array, world_to_pix_scale: int, chunk_size: int)
 	# Set up the chunks array and calculate the world size (in chunks)
 	var chunks = []
 
-	var height = terrain_data.size()
+	var height = terrain_data[0].size()
 	if height == 0:
 		return []
-	var width = terrain_data[0].size()
+	var width = terrain_data.size()
 	if width == 0:
 		return []
 		
-	print(width, height)
-    # Throwing an error here. Fix!
-
 	# Loop through the chunks and mesh them
 	for x in range(width):
 		for y in range(height):
