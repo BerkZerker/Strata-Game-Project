@@ -1,10 +1,10 @@
 extends Node2D
 
 # Variables 
-@export var chunk_size: int = 32 # how many blocks per chunk
-@export var world_width: int = 20 # in chunks
-@export var world_height: int = 15 # in chunks
-@export var world_to_pix_scale: int = 8 # How big a block is in pix
+@export var chunk_size: int = 64 # how many blocks per chunk
+@export var world_width: int = 40 # in chunks
+@export var world_height: int = 20 # in chunks
+@export var world_to_pix_scale: int = 1 # How big a block is in pix
 @export var world_seed: int = randi() % 100000 # Random seed for the world generation
 
 const TerrainGenerator := preload("res://src/scripts/terrain_generator.gd")
@@ -12,6 +12,8 @@ const TerrainMesher := preload("res://src/scripts/terrain_mesher.gd")
 
 var chunk_data = []
 var chunk_meshes = []
+var pressed = false
+var mouse_button = "none"
 
 # Runs when the node is added to the scene
 func _ready() -> void:
@@ -29,12 +31,27 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
+		pressed = true
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			edit_terrain(get_global_mouse_position(), 3, 0) # Erase
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			edit_terrain(get_global_mouse_position(), 3, 1) # Add
+			mouse_button = "left"
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			mouse_button = "right"
+
+	elif event is InputEventMouseButton and not event.pressed:
+		pressed = false
+		mouse_button = "none"
+	
+	if event is InputEventMouseButton or InputEventMouseMotion and pressed:
+		if mouse_button == "left":
+			edit_terrain(get_global_mouse_position(), 15, 0) # Add solid blocks
+		elif mouse_button == "right":
+			edit_terrain(get_global_mouse_position(), 15, 1) # Remove solid blocks
 
 
+# This function needs to be cleaned up a bit, and should return
+# the amount of blocks edited and thier types.
+# It will also need to be optimized for performance, as well
+# as be able to handle different edit patterns.
 func edit_terrain(world_position: Vector2, radius: int, tile_type: int) -> void:
 	var center_block_pos = Vector2i(
 		floor(world_position.x / world_to_pix_scale),
@@ -65,7 +82,7 @@ func edit_terrain(world_position: Vector2, radius: int, tile_type: int) -> void:
 	# 4. Re-mesh all unique chunks that were affected
 	var mesher = TerrainMesher.new()
 	for chunk_pos in affected_chunks.keys():
-		# Find and remove the old chunk mesh
+		# Find and remove the old chunk mesh (reverse loop)
 		for i in range(chunk_meshes.size() - 1, -1, -1):
 			var mesh_node = chunk_meshes[i]
 			# Compare positions to find the right one

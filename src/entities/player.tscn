@@ -5,6 +5,8 @@
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lowyb"]
 
 [node name="Player" type="CharacterBody2D"]
+floor_stop_on_slope = false
+floor_block_on_wall = false
 script = ExtResource("1_lowyb")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
