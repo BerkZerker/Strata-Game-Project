@@ -10,6 +10,8 @@ extends Node2D
 const TerrainGenerator := preload("res://src/scripts/terrain_generator.gd")
 const TerrainMesher := preload("res://src/scripts/terrain_mesher.gd")
 
+var chunk_data = []
+var chunk_meshes = []
 
 # Runs when the node is added to the scene
 func _ready() -> void:
@@ -17,9 +19,16 @@ func _ready() -> void:
 	var generator = TerrainGenerator.new()
 	var mesher = TerrainMesher.new()
 
-	var terrain_data = generator.generate_noise_terrain(world_seed, Vector2i(world_width, world_height), chunk_size)
-	var chunks = mesher.mesh_terrain(terrain_data, world_to_pix_scale, chunk_size)
+	chunk_data = generator.generate_noise_terrain(world_seed, Vector2i(world_width, world_height), chunk_size)
+	chunk_meshes = mesher.mesh_terrain(chunk_data, world_to_pix_scale, chunk_size)
 
 	# Add the chunks to the scene
-	for chunk in chunks:
+	for chunk in chunk_meshes:
 		add_child(chunk)
+
+	edit_terrain(Vector2i(233, 450), 1, 1) # Example call to edit terrain
+
+
+func edit_terrain(position: Vector2i, radius: int, tile_type: int) -> void:
+	var current_chunk = chunk_data[position.x / chunk_size / world_to_pix_scale][position.y / chunk_size / world_to_pix_scale]
+	print(current_chunk)
