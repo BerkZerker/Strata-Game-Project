@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
-const SPEED = 250.0
-const JUMP_VELOCITY = -700.0
+const SPEED = 300.0
+const JUMP_VELOCITY = -600.0
 
 
 func _physics_process(delta: float) -> void:

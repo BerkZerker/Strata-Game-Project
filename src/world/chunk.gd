@@ -12,8 +12,6 @@ func setup_area_2d(chunk_size: int, world_to_pix_scale: int) -> void:
 	# What a mess
 	shape.size = Vector2((chunk_size + chunk_padding) * world_to_pix_scale, (chunk_size + chunk_padding) * world_to_pix_scale)
 	collision_shape.position = Vector2(shape.size.x / 2.0 - chunk_padding / 2.0 * world_to_pix_scale, shape.size.y / 2.0 - chunk_padding / 2.0 * world_to_pix_scale)
-
-
 	collision_shape.shape = shape
 	$Area2D.add_child(collision_shape)
 
@@ -23,7 +21,6 @@ func add_collision_shapes(shapes: Array) -> void:
 	for shape in shapes:
 		$StaticBody2D.add_child(shape)
 		collision_shapes.append(shape)
-
 		shape.set_deferred("disabled", true)
 
 
