@@ -5,7 +5,7 @@ const Chunk: PackedScene = preload("res://src/world/chunk.tscn")
 
 
 # TEMP
-const dirt_texture: CompressedTexture2D = preload("res://assets/mc-dirt.png")
+const dirt_texture: CompressedTexture2D = preload("res://assets/dirt.png")
 
 
 # Function to build the terrain from the generated data
@@ -51,9 +51,9 @@ func mesh_chunk(chunk_pos: Vector2i, chunk_data: Array, world_to_pix_scale: int,
 
 # Temp sets up the visual mesh, needs to be called after the chunk is added to the scene
 # because otherwise the mesh instance will not be ready
-func setup_visuals(chunk_instance: Node2D, chunk_size: int) -> void:
+func setup_visuals(chunk_instance: Node2D, chunk_size: int, tile_size: int) -> void:
 	var chunk_data_array = chunk_instance.get_terrain_data()
-	var data_texture = _create_data_texture(chunk_data_array, chunk_size)
+	var data_texture = _create_data_texture(chunk_data_array, chunk_size, tile_size)
 
 	var material = chunk_instance.mesh_instance.material
 	if not material is ShaderMaterial:
@@ -68,7 +68,7 @@ func setup_visuals(chunk_instance: Node2D, chunk_size: int) -> void:
 # maybe TEMP
 # Encodes the terrain data into a texture for the shader
 # The _create_data_texture helper function remains exactly the same as before.
-func _create_data_texture(data_array: Array, size: int) -> ImageTexture:
+func _create_data_texture(data_array: Array, size: int, tile_size: int) -> ImageTexture:
 	# ... same code as the previous answer ...
 	var width = size
 	var height = size

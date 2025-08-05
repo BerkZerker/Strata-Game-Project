@@ -7,8 +7,8 @@ var terrain_data = []
 
 # TEMP - whole _ready func needs to be cleaned up
 # Define constants for clarity
-const CHUNK_WIDTH = 64
-const CHUNK_HEIGHT = 64
+const CHUNK_WIDTH = 128
+const CHUNK_HEIGHT = 128
 const TILE_SIZE = 1 # In pixels
 
 @onready var mesh_instance: MeshInstance2D = $MeshInstance2D
@@ -28,7 +28,7 @@ func _ready():
 	mesh_instance.mesh = quad_mesh
 	
 	# Create a new ShaderMaterial and assign the shader to it
-	var material = ShaderMaterial.new()
+	material = ShaderMaterial.new()
 	material.shader = terrain_material
 	
 	# Assign the material to the mesh instance

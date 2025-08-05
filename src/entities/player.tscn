@@ -14,7 +14,7 @@ script = ExtResource("1_lowyb")
 shape = SubResource("CapsuleShape2D_lowyb")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(1.59, 1.59)
+zoom = Vector2(4, 4)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(-3, 8.9407e-08)

@@ -21,7 +21,7 @@ func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) ->
 			for i in range(chunk_size):
 				chunk.append([])
 				for j in range(chunk_size):
-					var value = 1 # noise.get_noise_2d(float(x * chunk_size + i), float(y * chunk_size + j))
+					var value = noise.get_noise_2d(float(x * chunk_size + j), float(y * chunk_size + i))
 					# Santize the value to be an int - solid is 1 air is 0
 					if value > 0:
 						value = 1

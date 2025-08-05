@@ -1,7 +1,7 @@
 extends Node2D
 
 # Variables 
-@export var chunk_size: int = 64 # how many blocks per chunk
+@export var chunk_size: int = 128 # how many blocks per chunk
 @export var world_width: int = 16 # in chunks
 @export var world_height: int = 8 # in chunks
 @export var world_to_pix_scale: int = 1 # How big a block is in pix
@@ -29,7 +29,7 @@ func _ready() -> void:
 		add_child(chunk)
 
 		# TEMP
-		mesher.setup_visuals(chunk, chunk_size)
+		mesher.setup_visuals(chunk, chunk_size, world_to_pix_scale)
 
 
 func _input(event: InputEvent) -> void:
@@ -101,6 +101,6 @@ func edit_terrain(world_position: Vector2, radius: int, tile_type: int) -> void:
 		new_chunk_mesh.set_terrain_data(chunk_data[chunk_pos.x][chunk_pos.y])
 		add_child(new_chunk_mesh)
 		# TEMP
-		mesher.setup_visuals(new_chunk_mesh, chunk_size)
+		mesher.setup_visuals(new_chunk_mesh, chunk_size, world_to_pix_scale)
 		
 		chunk_meshes.append(new_chunk_mesh)

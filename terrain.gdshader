@@ -1,8 +1,8 @@
 shader_type canvas_item;
 
-uniform sampler2D chunk_data_texture;
+uniform sampler2D chunk_data_texture : filter_nearest;
 uniform sampler2D dirt_texture : source_color, repeat_enable, filter_nearest;
-uniform vec2 dirt_texture_size = vec2(16.0, 16.0);
+uniform vec2 dirt_texture_size = vec2(32.0, 32.0);
 
 varying vec2 world_position; // Pixel world pos
 
