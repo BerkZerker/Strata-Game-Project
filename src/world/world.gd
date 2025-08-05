@@ -2,8 +2,8 @@ extends Node2D
 
 # Variables 
 @export var chunk_size: int = 64 # how many blocks per chunk
-@export var world_width: int = 10 # in chunks
-@export var world_height: int = 5 # in chunks
+@export var world_width: int = 30 # in chunks
+@export var world_height: int = 20 # in chunks
 @export var world_to_pix_scale: int = 1 # How big a block is in pix
 @export var world_seed: int = randi() % 100000 # Random seed for the world generation
 
@@ -48,7 +48,7 @@ func _input(event: InputEvent) -> void:
 		if mouse_button == "left":
 			edit_terrain(get_global_mouse_position(), 10, 0) # Add solid blocks
 		elif mouse_button == "right":
-			edit_terrain(get_global_mouse_position(), 10, 1) # Remove solid blocks
+			edit_terrain(get_global_mouse_position(), 10, 3) # Remove solid blocks
 
 
 # This function needs to be cleaned up a bit, and should return

@@ -6,7 +6,8 @@ const Chunk: PackedScene = preload("res://src/world/chunk.tscn")
 
 # TEMP
 const dirt_texture: CompressedTexture2D = preload("res://assets/dirt.png")
-
+const grass_texture: CompressedTexture2D = preload("res://assets/grass.png")
+const stone_texture: CompressedTexture2D = preload("res://assets/stone.png")
 
 # Function to build the terrain from the generated data
 func mesh_terrain(terrain_data: Array, world_to_pix_scale: int, chunk_size: int) -> Array:
@@ -63,7 +64,8 @@ func setup_visuals(chunk_instance: Node2D, chunk_size: int, tile_size: int) -> v
 	# Set the uniforms for our new shader
 	material.set_shader_parameter("chunk_data_texture", data_texture)
 	material.set_shader_parameter("dirt_texture", dirt_texture)
-
+	material.set_shader_parameter("grass_texture", grass_texture)
+	material.set_shader_parameter("stone_texture", stone_texture)
 
 # maybe TEMP
 # Encodes the terrain data into a texture for the shader

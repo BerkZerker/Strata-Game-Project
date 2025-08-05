@@ -7,7 +7,7 @@ func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) ->
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	noise.seed = world_seed
-	noise.frequency = 0.05
+	noise.frequency = 0.003
 
 	var terrain_data = []
 
@@ -23,8 +23,12 @@ func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) ->
 				for j in range(chunk_size):
 					var value = noise.get_noise_2d(float(x * chunk_size + j), float(y * chunk_size + i))
 					# Santize the value to be an int - solid is 1 air is 0
-					if value > 0:
-						value = 1
+					if value > 0.3:
+						value = 3 # Stone
+					elif value > 0.2:
+						value = 1 # Dirt
+					elif value > 0.1:
+						value = 2 # Grass
 					else:
 						value = 0
 					chunk[i].append(value)
