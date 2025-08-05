@@ -7,8 +7,8 @@ var terrain_data = []
 
 # TEMP - whole _ready func needs to be cleaned up
 # Define constants for clarity
-const CHUNK_WIDTH = 128
-const CHUNK_HEIGHT = 128
+const CHUNK_WIDTH = 64
+const CHUNK_HEIGHT = 64
 const TILE_SIZE = 1 # In pixels
 
 @onready var mesh_instance: MeshInstance2D = $MeshInstance2D

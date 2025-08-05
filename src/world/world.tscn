@@ -7,4 +7,4 @@
 script = ExtResource("1_tp5op")
 
 [node name="Player" parent="." instance=ExtResource("2_xlegt")]
-position = Vector2(120, -25)
+position = Vector2(228, -32)

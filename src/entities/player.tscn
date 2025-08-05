@@ -1,9 +1,11 @@
 [gd_scene load_steps=4 format=3 uid="uid://dhjepimdy0621"]
 
 [ext_resource type="Script" uid="uid://ctjvxf3jfo7dq" path="res://src/entities/player.gd" id="1_lowyb"]
-[ext_resource type="Texture2D" uid="uid://fs2v32u3o8o8" path="res://assets/chill-guy.png" id="2_3glep"]
+[ext_resource type="Texture2D" uid="uid://bswgdigt85xxn" path="res://assets/player.png" id="2_3glep"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lowyb"]
+radius = 5.0
+height = 16.0
 
 [node name="Player" type="CharacterBody2D"]
 floor_stop_on_slope = false
@@ -13,10 +15,8 @@ script = ExtResource("1_lowyb")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_lowyb")
 
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_3glep")
+
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(4, 4)
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(-3, 8.9407e-08)
-scale = Vector2(0.61, 0.566038)
-texture = ExtResource("2_3glep")

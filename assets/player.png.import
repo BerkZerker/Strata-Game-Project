@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://fs2v32u3o8o8"
-path="res://.godot/imported/chill-guy.png-9ab4c721e1a1fb0bd44d0024feaacb30.ctex"
+uid="uid://bswgdigt85xxn"
+path="res://.godot/imported/player.png-be2216fcaabb5c62aa2466cd9a5726a8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/chill-guy.png"
-dest_files=["res://.godot/imported/chill-guy.png-9ab4c721e1a1fb0bd44d0024feaacb30.ctex"]
+source_file="res://assets/player.png"
+dest_files=["res://.godot/imported/player.png-be2216fcaabb5c62aa2466cd9a5726a8.ctex"]
 
 [params]
 
