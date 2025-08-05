@@ -58,7 +58,6 @@ The fragment shader will be responsible for drawing the correct tile from the te
 
 2.  **Modify `chunk.gd`:**
 
-    - Remove the `StaticBody2D` and collision shape generation (for now, we can add it back later).
     - Add a `MeshInstance2D` to the `chunk.tscn` scene.
     - In `setup_area_2d`, create a `QuadMesh` and assign it to the `MeshInstance2D`.
 

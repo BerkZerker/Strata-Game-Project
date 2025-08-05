@@ -7,8 +7,8 @@ extends Node2D
 @export var world_to_pix_scale: int = 1 # How big a block is in pix
 @export var world_seed: int = randi() % 100000 # Random seed for the world generation
 
-const TerrainGenerator := preload("res://src/scripts/terrain_generator.gd")
-const TerrainMesher := preload("res://src/scripts/terrain_mesher.gd")
+const TerrainGenerator: Script = preload("res://src/scripts/terrain_generator.gd")
+const TerrainMesher: Script = preload("res://src/scripts/terrain_mesher.gd")
 
 var chunk_data = []
 var chunk_meshes = []
@@ -27,6 +27,9 @@ func _ready() -> void:
 	# Add the chunks to the scene
 	for chunk in chunk_meshes:
 		add_child(chunk)
+
+		# TEMP
+		mesher.setup_visuals(chunk, chunk_size)
 
 
 func _input(event: InputEvent) -> void:
@@ -94,5 +97,10 @@ func edit_terrain(world_position: Vector2, radius: int, tile_type: int) -> void:
 
 		# Create and add the new, updated chunk mesh
 		var new_chunk_mesh = mesher.mesh_chunk(chunk_pos, chunk_data[chunk_pos.x][chunk_pos.y], world_to_pix_scale, chunk_size)
+		# TEMP
+		new_chunk_mesh.set_terrain_data(chunk_data[chunk_pos.x][chunk_pos.y])
 		add_child(new_chunk_mesh)
+		# TEMP
+		mesher.setup_visuals(new_chunk_mesh, chunk_size)
+		
 		chunk_meshes.append(new_chunk_mesh)

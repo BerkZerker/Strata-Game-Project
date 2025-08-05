@@ -19,3 +19,7 @@ config/features=PackedStringArray("4.4")
 window/size/viewport_width=960
 window/size/viewport_height=540
 window/stretch/aspect="expand"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0

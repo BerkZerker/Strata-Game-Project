@@ -1,0 +1,12 @@
+[gd_scene load_steps=4 format=3 uid="uid://dqkpxdxxgrf4e"]
+
+[ext_resource type="Shader" uid="uid://dc7sagm32fm2m" path="res://shader_demo.gdshader" id="1_83x4a"]
+[ext_resource type="Texture2D" uid="uid://dg20c44v3re7x" path="res://assets/mc-grass.png" id="1_wag3d"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3es0f"]
+shader = ExtResource("1_83x4a")
+shader_parameter/blue = 1.0
+
+[node name="ShaderDemo" type="Sprite2D"]
+material = SubResource("ShaderMaterial_3es0f")
+texture = ExtResource("1_wag3d")

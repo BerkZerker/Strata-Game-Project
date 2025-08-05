@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://dhjepimdy0621"]
+[gd_scene load_steps=4 format=3 uid="uid://dhjepimdy0621"]
 
 [ext_resource type="Script" uid="uid://ctjvxf3jfo7dq" path="res://src/entities/player.gd" id="1_lowyb"]
+[ext_resource type="Texture2D" uid="uid://fs2v32u3o8o8" path="res://assets/chill-guy.png" id="2_3glep"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lowyb"]
 
@@ -13,4 +14,8 @@ script = ExtResource("1_lowyb")
 shape = SubResource("CapsuleShape2D_lowyb")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position_smoothing_enabled = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-3, 8.9407e-08)
+scale = Vector2(0.61, 0.566038)
+texture = ExtResource("2_3glep")
