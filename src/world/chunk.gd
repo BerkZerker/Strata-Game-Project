@@ -32,6 +32,7 @@ func _ready():
 	material.shader = terrain_material
 	
 	# Assign the material to the mesh instance
+	# WHY DO I HAVE TO DO THIS VIA CODE???
 	mesh_instance.material = material
 	
 	# Center the mesh on the node's origin if desired

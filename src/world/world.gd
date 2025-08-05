@@ -46,9 +46,9 @@ func _input(event: InputEvent) -> void:
 	
 	if event is InputEventMouseButton or InputEventMouseMotion and pressed:
 		if mouse_button == "left":
-			edit_terrain(get_global_mouse_position(), 10, 0) # Add solid blocks
+			edit_terrain(get_global_mouse_position(), 20, 0) # Add solid blocks
 		elif mouse_button == "right":
-			edit_terrain(get_global_mouse_position(), 10, 1) # Remove solid blocks
+			edit_terrain(get_global_mouse_position(), 20, 1) # Remove solid blocks
 
 
 # This function needs to be cleaned up a bit, and should return
