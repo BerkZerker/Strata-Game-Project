@@ -2,7 +2,7 @@ extends Node2D
 
 # Variables 
 @export var chunk_size: int = 64 # how many blocks per chunk
-@export var world_width: int = 30 # in chunks
+@export var world_width: int = 20 # in chunks
 @export var world_height: int = 20 # in chunks
 @export var world_to_pix_scale: int = 1 # How big a block is in pix
 @export var world_seed: int = randi() % 100000 # Random seed for the world generation

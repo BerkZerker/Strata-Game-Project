@@ -25,7 +25,7 @@ func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) ->
 					# Santize the value to be an int - solid is 1 air is 0
 					if value > 0.3:
 						value = 3 # Stone
-					elif value > 0.2:
+					elif value > 0.15:
 						value = 1 # Dirt
 					elif value > 0.1:
 						value = 2 # Grass
