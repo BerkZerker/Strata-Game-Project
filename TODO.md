@@ -2,5 +2,11 @@
 
 ## Code Cleanup
 
-- terrain_mesher.gd, chunk.gd, chunk.tscn, world.gd, player.tscn, player.gd - all need to be checked over, search for "TEMP" and clean up code.
-- I need to remove the old collision shapes AFTER adding the new ones otherwise the physics gets janked
+- The world.gd file needs some cleanup - I need to remove the old collision shapes AFTER adding the new ones otherwise the physics gets janked. The entire terrain updating process (collision and visuals) needs to be worked on.
+- I need to clean up the chunk.gd file and possibly remove the mesh2d from the scene, to do it in code. This would allow me to set it up before adding the instance to the parent scene. Additionally I need to pass all the args to a setup function, not have them hardcoded.
+- terrain_mesher.gd likely goes hand in hand with chunk.gd and will need some of it's code moved to a new file, and I'll likely have to do some renaming as well (mesher -> builder). Then name the new file mesher and make it responsible for handling the mesh.
+- Overall clean up the generation, building, and meshing code for the world, clean up the shader, and honestly maybe then add multi-threading so all of this can be done on a separate thread.
+
+## NormalMap Link
+
+[smartnormal](https://www.smart-page.net/smartnormal/)
