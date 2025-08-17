@@ -23,12 +23,12 @@ func mesh(grid: Array) -> Array:
 	# Iterate through each cell
 	for y in range(height):
 		for x in range(width):
-			if visited[y][x] or grid[y][x] == 0: # Skip if already visited or empty
+			if visited[y][x] or grid[y][x][0] == 0: # Skip if already visited or empty
 				continue
 			
 			# Find the width of the rectangle
 			var rect_width = 1
-			while x + rect_width < width and grid[y][x + rect_width] == grid[y][x] and not visited[y][x + rect_width]:
+			while x + rect_width < width and grid[y][x + rect_width][0] == grid[y][x][0] and not visited[y][x + rect_width]:
 				rect_width += 1
 			
 			# Find the height of the rectangle
@@ -36,7 +36,7 @@ func mesh(grid: Array) -> Array:
 			var can_extend = true
 			while y + rect_height < height and can_extend:
 				for dx in range(rect_width):
-					if grid[y + rect_height][x + dx] != grid[y][x] or visited[y + rect_height][x + dx]:
+					if grid[y + rect_height][x + dx][0] != grid[y][x][0] or visited[y + rect_height][x + dx]:
 						can_extend = false
 						break
 				if can_extend:

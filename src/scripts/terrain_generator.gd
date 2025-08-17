@@ -11,6 +11,8 @@ func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) ->
 
 	var terrain_data = []
 
+	var clump_number = 0
+
 	# Generate the world data
 	for x in range(size.x):
 		terrain_data.append([]) # Add a new row to the world array
@@ -31,9 +33,11 @@ func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) ->
 						value = 2 # Grass
 					else:
 						value = 0
-					chunk[i].append(value)
+					chunk[i].append([value, clump_number]) # DEBUG TEMP
 
 			# Add the chunk to the world array
 			terrain_data[x].append(chunk)
+		# Increment the clump number for the next clump (DEBUG)
+		clump_number += 1
 
 	return terrain_data

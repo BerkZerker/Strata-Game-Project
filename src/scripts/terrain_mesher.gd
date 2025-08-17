@@ -77,7 +77,8 @@ func _create_data_texture(data_array: Array, size: int, tile_size: int) -> Image
 	var image = Image.create(width, height, false, Image.FORMAT_R8)
 	for x in range(width):
 		for y in range(height):
-			var tile_id = float(data_array[-y - 1][x])
+			var tile_id = float(data_array[-y - 1][x][0])
+			var clump_id = float(data_array[-y - 1][x][1])
 			if tile_id != 0:
 				image.set_pixel(x, y, Color(tile_id / 255.0, 0, 0))
 			else:

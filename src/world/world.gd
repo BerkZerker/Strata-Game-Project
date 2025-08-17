@@ -79,7 +79,7 @@ func edit_terrain(world_position: Vector2, radius: int, tile_type: int) -> void:
 					continue
 
 				# 3. Update the data and mark the chunk as "dirty"
-				chunk_data[chunk_pos.x][chunk_pos.y][local_pos.y][local_pos.x] = tile_type
+				chunk_data[chunk_pos.x][chunk_pos.y][local_pos.y][local_pos.x] = [tile_type, 0] # SUPER TEMP
 				affected_chunks[chunk_pos] = true
 
 	# 4. Re-mesh all unique chunks that were affected
