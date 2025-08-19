@@ -15,3 +15,9 @@
 - Write up some documentation to at least explain the project structure!!!
 
 - I need to figure out a way to use the shader to not only draw terrains but also shade the boarders between them and make a better generator to generate clumps in the terrain data.
+
+## Architecture Notes
+
+- The `shader_stuff.gd` file needs to be renamed and then it along with the `greedy_meshing.gd` files should be instanced in the `world.tscn` scene ONCE. Perhaps even have the shader stuff as an autoloaded singleton. Then they should be passed down the pipeline to the `terrain_builder.gd` file, which uses them to instance each chunk.
+
+  Note! Consider using a singleton for a signal bus called events or something.

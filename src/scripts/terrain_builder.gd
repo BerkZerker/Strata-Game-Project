@@ -1,5 +1,6 @@
 extends Node
 
+# Right now I'm instanceing this locally but it should be passed down.
 const GreedyMeshing: Script = preload("res://src/scripts/greedy_meshing.gd")
 const Chunk: PackedScene = preload("res://src/world/chunk.tscn")
 
@@ -36,6 +37,9 @@ func build_terrain(terrain_data: Array, chunk_size: int) -> Array:
 # and visual data (mesh & shader) - I'll probably need to update the `shader_stuff.gd` file
 # and make sure the new terrain data format works especially for the greedy messhing .
 # Then just clean up the world and player files and the project structure.
+
+# Note that the greedy meshing and the visuals setup will be a single instance, not individual to 
+# each chunk.
 func build_chunk(chunk_pos: Vector2i, chunk_data: Array, chunk_size: int) -> Node:
 	# Generate the collision mesh
 	var mesher = GreedyMeshing.new()
