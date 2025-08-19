@@ -51,10 +51,13 @@ func mesh(grid: Array) -> Array:
 			var rectangle = Rect2(x, y, rect_width, rect_height)
 			rectangles.append(rectangle)
 	
-	return rectangles
+	# Generate the collision shapes and return them
+	var collision_shapes = _create_collision_shapes(rectangles)
+	
+	return collision_shapes
 
-# Function to create collision shapes from the meshed rectangles
-func create_collision_shapes(rectangles: Array, scale: float) -> Array:
+# Helper function to create collision shapes from the meshed rectangles
+func _create_collision_shapes(rectangles: Array) -> Array:
 	var shapes = []
 	for rect in rectangles:
 		var collision_shape = CollisionShape2D.new()
@@ -62,11 +65,11 @@ func create_collision_shapes(rectangles: Array, scale: float) -> Array:
 		
 		# Set the size of the rectangle shape
 		# Multiply by cell_size to convert from grid coordinates to world coordinates
-		shape.size = rect.size * scale
+		shape.size = rect.size
 		
 		# Set the position of the collision shape
 		# Add half the size to center the shape on the grid cells
-		collision_shape.position = (rect.position * scale) + (shape.size / 2)
+		collision_shape.position = (rect.position) + (shape.size / 2)
 
 		collision_shape.shape = shape
 		shapes.append(collision_shape)

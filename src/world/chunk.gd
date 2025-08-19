@@ -1,19 +1,20 @@
 extends Node2D
 
-var collision_shapes = []
-var rectangles = []
+@export var CHUNK_PADDING: int = 64 # How many blocks to pad the chunk by to detect entities
+
+@onready var mesh_instance: MeshInstance2D = $MeshInstance2D
+@onready var area_2d: Area2D = $Area2D
+@onready var static_body: StaticBody2D = $StaticBody2D
+
 var terrain_data = []
 
 
-# TEMP - whole _ready func needs to be cleaned up
-# Define constants for clarity
-const CHUNK_WIDTH = 64
-const CHUNK_HEIGHT = 64
-const TILE_SIZE = 1 # In pixels
+func setup(chunk_size: int) -> void:
+	pass
 
-@onready var mesh_instance: MeshInstance2D = $MeshInstance2D
 
-func _ready():
+func setup_mesh_instance(chunk_size: int):
+	# MOST OF THIS NEEDS IT'S OWN FUNCTION
 	# Pre-load the shader material so we don't load it for every chunk
 	var terrain_material = preload("res://terrain.gdshader")
 	
@@ -21,7 +22,7 @@ func _ready():
 	var quad_mesh = QuadMesh.new()
 	
 	# The size of the mesh should be the total size of the chunk in pixels
-	var mesh_size = Vector2(CHUNK_WIDTH * TILE_SIZE, CHUNK_HEIGHT * TILE_SIZE)
+	var mesh_size = Vector2(chunk_size, chunk_size)
 	quad_mesh.size = mesh_size
 	
 	# Assign the mesh to our MeshInstance2D node
@@ -40,48 +41,53 @@ func _ready():
 	mesh_instance.position = mesh_size / 2.0
 
 
-func setup_area_2d(chunk_size: int, world_to_pix_scale: int) -> void:
+# Sets up the area2d to detect entities and activate the chunk when one is nearby.
+func _setup_area_2d(chunk_size: int) -> void:
 	var collision_shape = CollisionShape2D.new()
 	var shape = RectangleShape2D.new()
-	var chunk_padding = chunk_size # Overlapping padding in blocks. May need tweaking depending on block size.
 
-	# What a mess
-	shape.size = Vector2((chunk_size + chunk_padding) * world_to_pix_scale, (chunk_size + chunk_padding) * world_to_pix_scale)
-	collision_shape.position = Vector2(shape.size.x / 2.0 - chunk_padding / 2.0 * world_to_pix_scale, shape.size.y / 2.0 - chunk_padding / 2.0 * world_to_pix_scale)
+	# Fancy maths
+	shape.size = Vector2(chunk_size + CHUNK_PADDING, chunk_size + CHUNK_PADDING)
+	# Center it
+	collision_shape.position = Vector2(shape.size.x / 2.0 - CHUNK_PADDING / 2.0, shape.size.y / 2.0 - CHUNK_PADDING / 2.0)
+	# Assign the shape
 	collision_shape.shape = shape
-	$Area2D.add_child(collision_shape)
+	area_2d.add_child(collision_shape)
 
 
-# Helper function - very temporary
-func add_collision_shapes(shapes: Array) -> void:
-	for shape in shapes:
-		$StaticBody2D.add_child(shape)
-		collision_shapes.append(shape)
-		shape.set_deferred("disabled", true)
-		
+# Helper function to setup the collision shapes.
+func setup_collision_shapes(shapes: Array) -> void:
+	# Delete the old shapes
+	for child in static_body.get_children():
+		child.queue_free()
 
-func set_terrain_data(data: Array) -> void:
-	terrain_data = data
+	# Check if the chunk is already active
+	var is_active = false
+	for body in area_2d.get_overlapping_bodies():
+		if body is CharacterBody2D: # For now this is just the player
+			is_active = true
+			break
 
-
-func get_terrain_data() -> Array:
-	return terrain_data
-
-
-# Probably redundant, but makes a unique copy of the chunk data
-func add_rectangles(rects: Array) -> void:
-	rectangles = rects.duplicate(true)
+	# And setup the shapes
+	if is_active:
+		for shape in shapes:
+			shape.set_deferred("disabled", false)
+			static_body.add_child(shape)
+	else:
+		for shape in shapes:
+			shape.set_deferred("disabled", true)
+			static_body.add_child(shape)
 
 
 # Enables the collision shapes when the player enters the area
 func _on_area_2d_body_entered(body: Node2D) -> void:
-	if body is CharacterBody2D:
-		for child in $StaticBody2D.get_children():
+	if body is CharacterBody2D: # For now this is just the player
+		for child in static_body.get_children():
 			child.set_deferred("disabled", false)
 
 
 # Disables the collision shapes when the player exits the area
 func _on_area_2d_body_exited(body: Node2D) -> void:
-	if body is CharacterBody2D:
-		for child in $StaticBody2D.get_children():
+	if body is CharacterBody2D: # For now this is just the player
+		for child in static_body.get_children():
 			child.set_deferred("disabled", true)
