@@ -5,12 +5,19 @@ const dirt_texture: CompressedTexture2D = preload("res://assets/dirt.png")
 const grass_texture: CompressedTexture2D = preload("res://assets/grass.png")
 const stone_texture: CompressedTexture2D = preload("res://assets/stone.png")
 
+# Do something like this and make 
+static var TEXTURE_LOOKUP = {
+	0: "res://assets/dirt.png",
+	1: "res://assets/grass.png",
+	2: "res://assets/stone.png"
+}
+
 
 # Temp sets up the visual mesh, needs to be called after the chunk is added to the scene
 # because otherwise the mesh instance will not be ready
-func setup_visuals(chunk_instance: Node2D, chunk_size: int, tile_size: int) -> void:
+func setup_visuals(chunk_instance: Node2D, chunk_size: int) -> void:
 	var chunk_data_array = chunk_instance.get_terrain_data()
-	var data_texture = _create_data_texture(chunk_data_array, chunk_size, tile_size)
+	var data_texture = _create_data_texture(chunk_data_array, chunk_size)
 
 	var material = chunk_instance.mesh_instance.material
 		
@@ -23,7 +30,7 @@ func setup_visuals(chunk_instance: Node2D, chunk_size: int, tile_size: int) -> v
 # maybe TEMP
 # Encodes the terrain data into a texture for the shader
 # The _create_data_texture helper function remains exactly the same as before.
-func _create_data_texture(data_array: Array, size: int, tile_size: int) -> ImageTexture:
+func _create_data_texture(data_array: Array, size: int) -> ImageTexture:
 	# ... same code as the previous answer ...
 	var width = size
 	var height = size

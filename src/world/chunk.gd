@@ -10,16 +10,18 @@ var terrain_data = []
 var chunk_size: int # Size of the chunk in pixels
 
 
-# Builds the chunk scene. Should be called after instancing the chunk
+# Builds the chunk scene. Should be called after adding the chunk to the scene
 func build(chunk_data: Array, chunk_pos: Vector2i) -> void:
+	print('build called')
 	terrain_data = chunk_data
 	chunk_size = chunk_data.size() # Assuming square chunks
 
 	# Set the chunk's position.
 	position = Vector2(chunk_pos.x * chunk_size, chunk_pos.y * chunk_size)
 
-	_setup_area_2d()
-	_setup_collision_shapes()
+	#await self.ready
+	#_setup_area_2d()
+	#_setup_collision_shapes()
 
 	# Need to figure out how to set up the textures and shaders here
 
@@ -37,8 +39,14 @@ func get_terrain_data() -> Array:
 func set_terrain_data(data: Array) -> void:
 	terrain_data = data
 
+# Move code from build to here?
+func _ready() -> void:
+	print('ready called!')
+	_setup_area_2d()
+	_setup_collision_shapes()
 
-func _setup_mesh_instance(chunk_size: int):
+
+func _setup_mesh_instance():
 	# MOST OF THIS NEEDS IT'S OWN FUNCTION
 	# Pre-load the shader material so we don't load it for every chunk
 	var terrain_material = load("res://terrain.gdshader")

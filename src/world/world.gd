@@ -2,8 +2,8 @@ extends Node2D
 
 # Variables 
 @export var CHUNK_SIZE: int = 64 # how many blocks per chunk
-@export var WORLD_WIDTH: int = 20 # in chunks
-@export var WORLD_HEIGHT: int = 20 # in chunks
+@export var WORLD_WIDTH: int = 10 # in chunks
+@export var WORLD_HEIGHT: int = 10 # in chunks
 @export var WORLD_SEED: int = randi() % 100000 # Random seed for the world generation
 
 const TerrainGenerator: Script = preload("res://src/scripts/terrain_generator.gd")
@@ -21,7 +21,7 @@ func _ready() -> void:
 	var builder = TerrainBuilder.new()
 
 	var world_data = generator.generate_noise_terrain(WORLD_SEED, Vector2i(WORLD_WIDTH, WORLD_HEIGHT), CHUNK_SIZE)
-	var chunks = builder.build_terrain(world_data, CHUNK_SIZE)
+	var chunks = builder.build_terrain(world_data)
 
 	# Add the chunks to the scene
 	for x in range(WORLD_WIDTH):
