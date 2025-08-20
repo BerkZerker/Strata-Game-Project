@@ -5,11 +5,7 @@ class_name GreedyMeshing extends Node
 static func mesh(grid: Array) -> Array:
 	# Get the dimensions of the grid
 	var height = grid.size()
-	if height == 0:
-		return []
 	var width = grid[0].size()
-	if width == 0:
-		return []
 	
 	# Create visited array to track processed cells
 	var visited = []

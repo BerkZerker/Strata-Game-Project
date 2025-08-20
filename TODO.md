@@ -1,25 +1,22 @@
 # TODO List
 
-## Code Cleanup
+## Tasks
 
-- The world.gd file needs some cleanup - I need to remove the old collision shapes AFTER adding the new ones otherwise the physics gets janked. The entire terrain updating process (collision and visuals) needs to be worked on.
+- Finish cleanup of code and project structure and write up some documentation to at least explain the project structure!
 
-- terrain_mesher.gd likely goes hand in hand with chunk.gd and will need some of it's code moved to a new file, and I'll likely have to do some renaming as well (mesher -> builder). Then name the new file mesher and make it responsible for handling the mesh.
+- Add multi-threading support for terrain generation and chunk loading.
 
-- Overall clean up the generation, building, and meshing code for the world, clean up the shader, and honestly maybe then add multi-threading so all of this can be done on a separate thread.
+- Update the terrain generation process to use voronoi diagrams and noise to make patterns in the terrain and update the shader code to render boarders between these patterns.
 
-### Less important
-
-- Write up some documentation to at least explain the project structure!!!
-
-- I need to figure out a way to use the shader to not only draw terrains but also shade the boarders between them and make a better generator to generate clumps in the terrain data.
+- Implement a flood fill algorithm for terrain modification based on the voronoi diagram terrain data. Start with breaking.
 
 ## Architecture Notes
 
-- The `shader_stuff.gd` file needs to be renamed and then it along with the `greedy_meshing.gd` files should be instanced in the `world.tscn` scene ONCE. Perhaps even have the shader stuff as an autoloaded singleton. Then they should be passed down the pipeline to the `terrain_builder.gd` file, which uses them to instance each chunk.
+- Move relavant code from shader_stuff.gd into chunk.gd and figure out a way to load the textures. I'll want to load them based on the block types in the terrain data.
 
-- What I'll probably do is move the shader code into `chunk.gd` where I'm setting up the mesh, make a `TextureManager` to handle all the texture loading and storage. Then I'll pass a reference to the `TextureManager` to each chunk.
+## Remainging cleanup
 
-  Note! Consider using a singleton for a signal bus called events or something.
-
-  Note 2! Test the `setup_collision_shapes` function with a spare `CharacterBody2D` to make sure my activation code works.
+- Player scene and script
+- World scene and script
+- Chunk scene and script & shader_stuff.gd
+- Note! Test the `setup_collision_shapes` function with a spare `CharacterBody2D` to make sure my activation code works.

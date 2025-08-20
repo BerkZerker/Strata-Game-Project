@@ -7,16 +7,41 @@ extends Node2D
 @onready var static_body: StaticBody2D = $StaticBody2D
 
 var terrain_data = []
+var chunk_size: int # Size of the chunk in pixels
 
 
-func setup(chunk_size: int) -> void:
-	pass
+# Builds the chunk scene. Should be called after instancing the chunk
+func build(chunk_data: Array, chunk_pos: Vector2i) -> void:
+	terrain_data = chunk_data
+	chunk_size = chunk_data.size() # Assuming square chunks
+
+	# Set the chunk's position.
+	position = Vector2(chunk_pos.x * chunk_size, chunk_pos.y * chunk_size)
+
+	_setup_area_2d()
+	_setup_collision_shapes()
+
+	# Need to figure out how to set up the textures and shaders here
 
 
-func setup_mesh_instance(chunk_size: int):
+func rebuild() -> void:
+	pass # TODO: Implement rebuild logic
+
+
+# Returns the terrain data for this chunk
+func get_terrain_data() -> Array:
+	return terrain_data
+
+
+# Sets the terrain data for this chunk
+func set_terrain_data(data: Array) -> void:
+	terrain_data = data
+
+
+func _setup_mesh_instance(chunk_size: int):
 	# MOST OF THIS NEEDS IT'S OWN FUNCTION
 	# Pre-load the shader material so we don't load it for every chunk
-	var terrain_material = preload("res://terrain.gdshader")
+	var terrain_material = load("res://terrain.gdshader")
 	
 	# Create a new QuadMesh for our chunk
 	var quad_mesh = QuadMesh.new()
@@ -42,21 +67,22 @@ func setup_mesh_instance(chunk_size: int):
 
 
 # Sets up the area2d to detect entities and activate the chunk when one is nearby.
-func _setup_area_2d(chunk_size: int) -> void:
+func _setup_area_2d() -> void:
 	var collision_shape = CollisionShape2D.new()
 	var shape = RectangleShape2D.new()
 
-	# Fancy maths
+	# Fancy maths to scale and position it
 	shape.size = Vector2(chunk_size + CHUNK_PADDING, chunk_size + CHUNK_PADDING)
-	# Center it
 	collision_shape.position = Vector2(shape.size.x / 2.0 - CHUNK_PADDING / 2.0, shape.size.y / 2.0 - CHUNK_PADDING / 2.0)
-	# Assign the shape
 	collision_shape.shape = shape
 	area_2d.add_child(collision_shape)
 
 
 # Helper function to setup the collision shapes.
-func setup_collision_shapes(shapes: Array) -> void:
+func _setup_collision_shapes() -> void:
+	# Run greedy meshing on the local copy of the terrain data
+	var shapes = GreedyMeshing.mesh(terrain_data)
+
 	# Delete the old shapes
 	for child in static_body.get_children():
 		child.queue_free()
