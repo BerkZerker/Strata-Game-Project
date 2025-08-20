@@ -8,7 +8,7 @@
 
   - What I'll likely do is create a chunk_manager scene that is a child of the world scene and actually holds all of the chunk instances. This will be able to fully set up a new chunk and add it to the tree in a thread and can be in charge of loading and unloading chunks as needed.
 
-- Update the terrain generation process to use voronoi diagrams and noise to make patterns in the terrain and update the shader code to render boarders between these patterns.
+- Update the terrain generation process to use voronoi diagrams, Lloyd's relaxation, and noise to make patterns in the terrain and update the shader code to render boarders between these patterns.
 
 - Implement a flood fill algorithm for terrain modification based on the voronoi diagram terrain data. Start with breaking.
 
