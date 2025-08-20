@@ -4,8 +4,6 @@
 
 - The world.gd file needs some cleanup - I need to remove the old collision shapes AFTER adding the new ones otherwise the physics gets janked. The entire terrain updating process (collision and visuals) needs to be worked on.
 
-- I need to clean up the chunk.gd file and possibly remove the mesh2d from the scene, to do it in code. This would allow me to set it up before adding the instance to the parent scene. Additionally I need to pass all the args to a setup function, not have them hardcoded.
-
 - terrain_mesher.gd likely goes hand in hand with chunk.gd and will need some of it's code moved to a new file, and I'll likely have to do some renaming as well (mesher -> builder). Then name the new file mesher and make it responsible for handling the mesh.
 
 - Overall clean up the generation, building, and meshing code for the world, clean up the shader, and honestly maybe then add multi-threading so all of this can be done on a separate thread.
@@ -20,4 +18,8 @@
 
 - The `shader_stuff.gd` file needs to be renamed and then it along with the `greedy_meshing.gd` files should be instanced in the `world.tscn` scene ONCE. Perhaps even have the shader stuff as an autoloaded singleton. Then they should be passed down the pipeline to the `terrain_builder.gd` file, which uses them to instance each chunk.
 
+- What I'll probably do is move the shader code into `chunk.gd` where I'm setting up the mesh, make a `TextureManager` to handle all the texture loading and storage. Then I'll pass a reference to the `TextureManager` to each chunk.
+
   Note! Consider using a singleton for a signal bus called events or something.
+
+  Note 2! Test the `setup_collision_shapes` function with a spare `CharacterBody2D` to make sure my activation code works.

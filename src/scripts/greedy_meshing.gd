@@ -1,8 +1,8 @@
-extends Node
+class_name GreedyMeshing extends Node
 
 # Function to perform greedy meshing on a 2D array
 # Returns an array of Rect2 objects representing the meshed rectangles
-func mesh(grid: Array) -> Array:
+static func mesh(grid: Array) -> Array:
 	# Get the dimensions of the grid
 	var height = grid.size()
 	if height == 0:
@@ -57,7 +57,7 @@ func mesh(grid: Array) -> Array:
 	return collision_shapes
 
 # Helper function to create collision shapes from the meshed rectangles
-func _create_collision_shapes(rectangles: Array) -> Array:
+static func _create_collision_shapes(rectangles: Array) -> Array:
 	var shapes = []
 	for rect in rectangles:
 		var collision_shape = CollisionShape2D.new()
