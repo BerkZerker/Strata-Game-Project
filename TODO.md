@@ -20,7 +20,7 @@
 
 - Add game instance scene and add world as a child. Make that the main scene
 - World scene and script
-- Player scene and script
+- Player scene and script; go ahead and add a raycast or something and make the collision shape a rect. Do my own slope handling logic.
 
 - Research algorithms to generate tessellating shapes as cells in the terrain using data driver attributes such as roughness, scale variance, and starting shape.
 
