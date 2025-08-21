@@ -5,6 +5,9 @@
 
 [node name="World" type="Node2D"]
 script = ExtResource("1_tp5op")
+CHUNK_SIZE = null
+WORLD_WIDTH = null
+WORLD_HEIGHT = null
 
 [node name="Player" parent="." instance=ExtResource("2_xlegt")]
 position = Vector2(228, -32)

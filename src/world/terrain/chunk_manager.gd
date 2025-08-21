@@ -8,7 +8,7 @@ func build_terrain(terrain_data: Array) -> Array:
 	var width = terrain_data.size()
 	var height = terrain_data[0].size()
 	# Load the chunk scene
-	var chunk_scene = load("res://src/world/chunk.tscn")
+	var chunk_scene = load("res://src/world/terrain/chunk.tscn")
 
 	# Loop through the chunks and mesh them
 	for x in range(width):

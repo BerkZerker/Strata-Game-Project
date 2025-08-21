@@ -1,10 +1,10 @@
 [gd_scene load_steps=7 format=3 uid="uid://dbbq2vtjx0w0y"]
 
-[ext_resource type="Script" uid="uid://8tvneba1o3wn" path="res://src/world/chunk.gd" id="1_bwt5w"]
-[ext_resource type="Shader" uid="uid://b4vyqx2a5say4" path="res://terrain.gdshader" id="2_133la"]
-[ext_resource type="Texture2D" uid="uid://oe2jckdihhsp" path="res://assets/dirt.png" id="3_h5loj"]
-[ext_resource type="Texture2D" uid="uid://83w5qniwnc00" path="res://assets/grass.png" id="4_lyq7u"]
-[ext_resource type="Texture2D" uid="uid://dcbbq2hyi7qx3" path="res://assets/stone.png" id="5_35h8j"]
+[ext_resource type="Script" uid="uid://8tvneba1o3wn" path="res://src/world/terrain/chunk.gd" id="1_bwt5w"]
+[ext_resource type="Shader" uid="uid://b4vyqx2a5say4" path="res://src/world/terrain/terrain.gdshader" id="2_133la"]
+[ext_resource type="Texture2D" uid="uid://oe2jckdihhsp" path="res://assets/textures/dirt.png" id="3_h5loj"]
+[ext_resource type="Texture2D" uid="uid://83w5qniwnc00" path="res://assets/textures/grass.png" id="4_lyq7u"]
+[ext_resource type="Texture2D" uid="uid://dcbbq2hyi7qx3" path="res://assets/textures/stone.png" id="5_35h8j"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_itscw"]
 resource_local_to_scene = true

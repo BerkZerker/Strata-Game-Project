@@ -18,8 +18,10 @@
 
 ## Remainging cleanup
 
-- Chunk scene and script
+- Add game instance scene and add world as a child. Make that the main scene
 - World scene and script
 - Player scene and script
+
+- Research algorithms to generate tessellating shapes as cells in the terrain using data driver attributes such as roughness, scale variance, and starting shape.
 
 - Note! Test the `setup_collision_shapes` function with debugging print statements after editing is added back in to make sure that it works as intended.
