@@ -6,85 +6,52 @@ extends Node2D
 @onready var area_2d: Area2D = $Area2D
 @onready var static_body: StaticBody2D = $StaticBody2D
 
-var terrain_data = []
+var terrain_data: Array = []
 var chunk_size: int # Size of the chunk in pixels
 
 
-# Builds the chunk scene. Should be called after adding the chunk to the scene
-# Called before ready. Need to rename
-func build(chunk_data: Array, chunk_pos: Vector2i) -> void:
+# Sets up the chunk's terrain data and size.
+# This should be called before the chunk is added to the tree, with 
+# the rest of the setup being done in the _ready() function
+func setup(chunk_data: Array, chunk_pos: Vector2i) -> void:
 	terrain_data = chunk_data
 	chunk_size = chunk_data.size() # Assuming square chunks
-
-	# Set the chunk's position.
-	position = Vector2(chunk_pos.x * chunk_size, chunk_pos.y * chunk_size)
-
-	#await self.ready
-	#_setup_area_2d()
-	#_setup_collision_shapes()
-
-	# Need to figure out how to set up the textures and shaders here
+	position = Vector2(chunk_pos.x * chunk_size, chunk_pos.y * chunk_size) # Global position
 
 
-func rebuild() -> void:
-	pass # TODO: Implement rebuild logic
+# Since arrays are passed by reference, any changes I make to the terrain data
+# outside of this script should be reflected on the terrain_data. This means
+# all this function has to do is refresh the collision shapes and the visual mesh.
+func refresh() -> void:
+	pass
 
 
-# Move code from build to here?
+# Go ahead and run setup for the scene
 func _ready() -> void:
-	_setup_area_2d()
-	_setup_collision_shapes()
-	_setup_visual_mesh()
+	_setup_area_2d() # For detecting when to activate the chunk
+	_setup_collision_shapes() # Sets up the collision shapes for the chunk (disabled by default)
+	_setup_visual_mesh() # Sets up the mesh instance and passes data to the terrain shader
 
 
 func _setup_visual_mesh():
-	# MOST OF THIS NEEDS IT'S OWN FUNCTION
-	# Pre-load the shader material so we don't load it for every chunk
-	#var terrain_material = load("res://terrain.gdshader")
-	# Create a new QuadMesh for our chunk
 	var quad_mesh = QuadMesh.new()
-	
-	# The size of the mesh should be the total size of the chunk in pixels
 	quad_mesh.size = Vector2(chunk_size, chunk_size)
-	
-	# Assign the mesh to our MeshInstance2D node
-	visual_mesh.mesh = quad_mesh
+	visual_mesh.mesh = quad_mesh # Assign the mesh to our MeshInstance2D node
+	visual_mesh.position = visual_mesh.mesh.size / 2.0 # Center it
 
-	# # Create a new ShaderMaterial and assign the shader to it
-	# material = ShaderMaterial.new()
-	# material.shader = terrain_material
-	
-	# Assign the material to the mesh instance
-	# WHY DO I HAVE TO DO THIS VIA CODE???
-	# mesh_instance.material = material
-	
-	# Center the mesh on the node's origin if desired
-	# This makes positioning the chunk based on its top-left corner easier.
-	visual_mesh.position = visual_mesh.mesh.size / 2.0
-
-	# Copied over code below
-	var data_texture = _create_data_texture()
-	visual_mesh.material.set_shader_parameter("chunk_data_texture", data_texture)
-
-# maybe TEMP
-# MOVE THIS INTO SETUP MESH
-# Encodes the terrain data into a texture for the shader
-# The _create_data_texture helper function remains exactly the same as before.
-func _create_data_texture() -> ImageTexture:
-	# ... same code as the previous answer ...
-	var image = Image.create(chunk_size, chunk_size, false, Image.FORMAT_R8)
+	# Loop over the terrain data to create the image for the shader
+	var image = Image.create(chunk_size, chunk_size, false, Image.FORMAT_RGBA8) # May need to play with this later to encode different types of data into the shader
 	for x in range(chunk_size):
 		for y in range(chunk_size):
 			# Encode the terrain data into the color channels
-			var block_id = float(terrain_data[-y - 1][x][0])
-			var clump_id = float(terrain_data[-y - 1][x][1])
-			if block_id != 0: # not air
-				image.set_pixel(x, y, Color(block_id / 255.0, 0, 0))
-			else:
-				image.set_pixel(x, y, Color(0, 0, 0)) # Transparent
+			var block_id = float(terrain_data[-y - 1][x][0]) # 0th index is block id
+			var cell_id = float(terrain_data[-y - 1][x][1]) # 1st index is the cell the block belongs to
+			
+			var pixel_data = Color(block_id / 255.0, cell_id / 255.0, 0, 0) # Encodes the values into the color channels
+			image.set_pixel(x, y, pixel_data)
 
-	var texture = ImageTexture.create_from_image(image)
-	return texture
+	var data_texture = ImageTexture.create_from_image(image)
+	visual_mesh.material.set_shader_parameter("chunk_data_texture", data_texture)
 
 
 # Sets up the area2d to detect entities and activate the chunk when one is nearby.
@@ -132,7 +99,6 @@ func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body is CharacterBody2D: # For now this is just the player
 		for child in static_body.get_children():
 			child.set_deferred("disabled", false)
-			#print('normal area detection, shapes enabled')
 
 
 # Disables the collision shapes when the player exits the area
@@ -140,4 +106,3 @@ func _on_area_2d_body_exited(body: Node2D) -> void:
 	if body is CharacterBody2D: # For now this is just the player
 		for child in static_body.get_children():
 			child.set_deferred("disabled", true)
-			#print('normal area detection, shapes disabled')

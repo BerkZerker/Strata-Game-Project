@@ -14,7 +14,6 @@
 
 ## Architecture Notes
 
-- Move relavant code from shader_stuff.gd into chunk.gd and figure out a way to load the textures. I'll want to load them based on the block types in the terrain data.
 - Note that build is called before the \_ready() function. So we can set up and assign all the data in build, but none of the actual "building" should be done until \_ready() is called. Rename functions to describe accurately.
 
 ## Remainging cleanup
@@ -23,4 +22,4 @@
 - World scene and script
 - Player scene and script
 
-- Note! Test the `setup_collision_shapes` function with a spare `CharacterBody2D` to make sure my activation code works.
+- Note! Test the `setup_collision_shapes` function with debugging print statements after editing is added back in to make sure that it works as intended.

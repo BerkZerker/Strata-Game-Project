@@ -16,7 +16,7 @@ func build_terrain(terrain_data: Array) -> Array:
 		for y in range(height):
 			# Build the chunk using the terrain data and the chunk's position
 			var chunk = chunk_scene.instantiate()
-			chunk.build(terrain_data[x][y], Vector2i(x, y))
+			chunk.setup(terrain_data[x][y], Vector2i(x, y))
 			# Add it to the chunks array. This can be indexed with an x & y coordinate pair
 			chunks[x].append(chunk)
 
