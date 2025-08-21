@@ -22,9 +22,9 @@ static func mesh(grid: Array) -> Array:
 			if visited[y][x] or grid[y][x][0] == 0: # Skip if already visited or empty
 				continue
 			
-			# Find the width of the rectangle
+			# Find the width of the rectangle using all block IDs that are not 0 (air)
 			var rect_width = 1
-			while x + rect_width < width and grid[y][x + rect_width][0] == grid[y][x][0] and not visited[y][x + rect_width]:
+			while x + rect_width < width and grid[y][x + rect_width][0] != 0 and not visited[y][x + rect_width]:
 				rect_width += 1
 			
 			# Find the height of the rectangle
@@ -32,7 +32,7 @@ static func mesh(grid: Array) -> Array:
 			var can_extend = true
 			while y + rect_height < height and can_extend:
 				for dx in range(rect_width):
-					if grid[y + rect_height][x + dx][0] != grid[y][x][0] or visited[y + rect_height][x + dx]:
+					if grid[y + rect_height][x + dx][0] == 0 or visited[y + rect_height][x + dx]:
 						can_extend = false
 						break
 				if can_extend:

@@ -13,7 +13,6 @@ var chunk_size: int # Size of the chunk in pixels
 # Builds the chunk scene. Should be called after adding the chunk to the scene
 # Called before ready. Need to rename
 func build(chunk_data: Array, chunk_pos: Vector2i) -> void:
-	print('build called')
 	terrain_data = chunk_data
 	chunk_size = chunk_data.size() # Assuming square chunks
 
@@ -30,15 +29,6 @@ func build(chunk_data: Array, chunk_pos: Vector2i) -> void:
 func rebuild() -> void:
 	pass # TODO: Implement rebuild logic
 
-
-# Returns the terrain data for this chunk
-func get_terrain_data() -> Array:
-	return terrain_data
-
-
-# Sets the terrain data for this chunk
-func set_terrain_data(data: Array) -> void:
-	terrain_data = data
 
 # Move code from build to here?
 func _ready() -> void:
@@ -77,6 +67,7 @@ func _setup_visual_mesh():
 	visual_mesh.material.set_shader_parameter("chunk_data_texture", data_texture)
 
 # maybe TEMP
+# MOVE THIS INTO SETUP MESH
 # Encodes the terrain data into a texture for the shader
 # The _create_data_texture helper function remains exactly the same as before.
 func _create_data_texture() -> ImageTexture:
@@ -86,9 +77,9 @@ func _create_data_texture() -> ImageTexture:
 		for y in range(chunk_size):
 			# Encode the terrain data into the color channels
 			var block_id = float(terrain_data[-y - 1][x][0])
-			var clump_id = float(terrain_data[-y - 1][x][1]) 
+			var clump_id = float(terrain_data[-y - 1][x][1])
 			if block_id != 0: # not air
-				image.set_pixel(x, y, Color(clump_id / 255.0, 0, 0))
+				image.set_pixel(x, y, Color(block_id / 255.0, 0, 0))
 			else:
 				image.set_pixel(x, y, Color(0, 0, 0)) # Transparent
 
@@ -122,6 +113,7 @@ func _setup_collision_shapes() -> void:
 	for body in area_2d.get_overlapping_bodies():
 		if body is CharacterBody2D: # For now this is just the player
 			is_active = true
+			print('body detected during setup! enabled shapes') # This will be helpful when editing terrain
 			break
 
 	# And setup the shapes
@@ -140,6 +132,7 @@ func _on_area_2d_body_entered(body: Node2D) -> void:
 	if body is CharacterBody2D: # For now this is just the player
 		for child in static_body.get_children():
 			child.set_deferred("disabled", false)
+			#print('normal area detection, shapes enabled')
 
 
 # Disables the collision shapes when the player exits the area
@@ -147,3 +140,4 @@ func _on_area_2d_body_exited(body: Node2D) -> void:
 	if body is CharacterBody2D: # For now this is just the player
 		for child in static_body.get_children():
 			child.set_deferred("disabled", true)
+			#print('normal area detection, shapes disabled')

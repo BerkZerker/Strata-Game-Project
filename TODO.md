@@ -19,11 +19,8 @@
 
 ## Remainging cleanup
 
-- Chunk scene and script & shader_stuff.gd
+- Chunk scene and script
 - World scene and script
 - Player scene and script
 
 - Note! Test the `setup_collision_shapes` function with a spare `CharacterBody2D` to make sure my activation code works.
-- Note 2! Why is greedy meshing not working correctly? Try removing the extra terrain data.
-
-So I need to load all of the textures in, and assign them to the shader. This is reguardless of the block types in the terrain data. Then apply this shader to the mesh instance in the chunk.
