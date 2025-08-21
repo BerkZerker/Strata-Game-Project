@@ -17,7 +17,7 @@ void fragment() {
 	// Get tile id from the encoded data in terrain_mesher.gd
 	float tile_id = texture(chunk_data_texture, UV).r * 255.0;
 	vec2 tile_uv = world_position / texture_size;
-	
+
 	if (tile_id < 0.5) {
 		// 0 is air
 		discard;
@@ -32,7 +32,7 @@ void fragment() {
 		COLOR = texture(stone_texture, tile_uv);
 	} else {
 		// fallback if unidentified
-		COLOR = vec4(1.0, 0.0, 1.0, 0.0); // Bright magenta 
+		COLOR = vec4(1.0, 0.0, 1.0, 0.0); // Bright magenta
 	}
 }
 

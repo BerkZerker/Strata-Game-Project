@@ -40,5 +40,5 @@ func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) ->
 		
 		# Increment the clump number for the next clump (DEBUG)
 		clump_number += 1
-
+		
 	return terrain_data

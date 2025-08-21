@@ -2,7 +2,7 @@ extends Node2D
 
 @export var CHUNK_PADDING: int = 64 # How many blocks to pad the chunk by to detect entities
 
-@onready var mesh_instance: MeshInstance2D = $MeshInstance2D
+@onready var visual_mesh: MeshInstance2D = $TerrainMesh
 @onready var area_2d: Area2D = $Area2D
 @onready var static_body: StaticBody2D = $StaticBody2D
 
@@ -11,6 +11,7 @@ var chunk_size: int # Size of the chunk in pixels
 
 
 # Builds the chunk scene. Should be called after adding the chunk to the scene
+# Called before ready. Need to rename
 func build(chunk_data: Array, chunk_pos: Vector2i) -> void:
 	print('build called')
 	terrain_data = chunk_data
@@ -41,37 +42,58 @@ func set_terrain_data(data: Array) -> void:
 
 # Move code from build to here?
 func _ready() -> void:
-	print('ready called!')
 	_setup_area_2d()
 	_setup_collision_shapes()
+	_setup_visual_mesh()
 
 
-func _setup_mesh_instance():
+func _setup_visual_mesh():
 	# MOST OF THIS NEEDS IT'S OWN FUNCTION
 	# Pre-load the shader material so we don't load it for every chunk
-	var terrain_material = load("res://terrain.gdshader")
-	
+	#var terrain_material = load("res://terrain.gdshader")
 	# Create a new QuadMesh for our chunk
 	var quad_mesh = QuadMesh.new()
 	
 	# The size of the mesh should be the total size of the chunk in pixels
-	var mesh_size = Vector2(chunk_size, chunk_size)
-	quad_mesh.size = mesh_size
+	quad_mesh.size = Vector2(chunk_size, chunk_size)
 	
 	# Assign the mesh to our MeshInstance2D node
-	mesh_instance.mesh = quad_mesh
-	
-	# Create a new ShaderMaterial and assign the shader to it
-	material = ShaderMaterial.new()
-	material.shader = terrain_material
+	visual_mesh.mesh = quad_mesh
+
+	# # Create a new ShaderMaterial and assign the shader to it
+	# material = ShaderMaterial.new()
+	# material.shader = terrain_material
 	
 	# Assign the material to the mesh instance
 	# WHY DO I HAVE TO DO THIS VIA CODE???
-	mesh_instance.material = material
+	# mesh_instance.material = material
 	
 	# Center the mesh on the node's origin if desired
 	# This makes positioning the chunk based on its top-left corner easier.
-	mesh_instance.position = mesh_size / 2.0
+	visual_mesh.position = visual_mesh.mesh.size / 2.0
+
+	# Copied over code below
+	var data_texture = _create_data_texture()
+	visual_mesh.material.set_shader_parameter("chunk_data_texture", data_texture)
+
+# maybe TEMP
+# Encodes the terrain data into a texture for the shader
+# The _create_data_texture helper function remains exactly the same as before.
+func _create_data_texture() -> ImageTexture:
+	# ... same code as the previous answer ...
+	var image = Image.create(chunk_size, chunk_size, false, Image.FORMAT_R8)
+	for x in range(chunk_size):
+		for y in range(chunk_size):
+			# Encode the terrain data into the color channels
+			var block_id = float(terrain_data[-y - 1][x][0])
+			var clump_id = float(terrain_data[-y - 1][x][1]) 
+			if block_id != 0: # not air
+				image.set_pixel(x, y, Color(clump_id / 255.0, 0, 0))
+			else:
+				image.set_pixel(x, y, Color(0, 0, 0)) # Transparent
+
+	var texture = ImageTexture.create_from_image(image)
+	return texture
 
 
 # Sets up the area2d to detect entities and activate the chunk when one is nearby.
