@@ -1,4 +1,4 @@
-extends Node
+extends Node2D
 
 
 # Function to build the terrain from the generated data - returns a 2d array of chunk instances.
