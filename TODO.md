@@ -1,10 +1,10 @@
 # TODO List
 
-- Add game instance scene and add world as a child. Make that the main scene
-
-- Add chunk_manager scene and add it to the world. It handles the threaded loading and unloading of chunks
+- Add chunk_manager scene and add it to the world. It handles the threaded loading and unloading of chunks. This file will also be in charge of generating the chunk data. This may mean I should make the generator a static function.
 
 - World scene and script cleanup
+
+- Create an input manager node perhaps?
 
 - Player scene and script; go ahead and add a raycast or something and make the collision shape a rect. Do my own slope handling logic. Move the input code for editing the terrain from the world script
 

@@ -1,13 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://dmenimsif17h2"]
+[gd_scene load_steps=3 format=3 uid="uid://dmenimsif17h2"]
 
 [ext_resource type="Script" uid="uid://bymyrjse82oq5" path="res://src/world/world.gd" id="1_tp5op"]
-[ext_resource type="PackedScene" uid="uid://dhjepimdy0621" path="res://src/entities/player.tscn" id="2_xlegt"]
 [ext_resource type="PackedScene" uid="uid://t1pwf87mdupr" path="res://src/world/terrain/chunk_manager.tscn" id="3_jte2u"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("1_tp5op")
-
-[node name="Player" parent="." instance=ExtResource("2_xlegt")]
-position = Vector2(228, -32)
 
 [node name="ChunkManager" parent="." instance=ExtResource("3_jte2u")]
