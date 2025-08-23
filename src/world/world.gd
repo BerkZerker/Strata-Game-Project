@@ -6,6 +6,8 @@ extends Node2D
 @export var WORLD_HEIGHT: int = 10 # in chunks
 @export var WORLD_SEED: int = randi() % 100000 # Random seed for the world generation
 
+@onready var chunk_manager = $ChunkManager
+
 var chunks: Array
 var pressed: bool = false
 var mouse_button: String = "none"
@@ -13,14 +15,11 @@ var mouse_button: String = "none"
 # Runs when the node is added to the scene
 func _ready() -> void:
 	# Generate the terrain data and build the chunks
-	var generator_scene = load("res://src/world/generation/terrain_generator.gd")
-	var generator = generator_scene.new()
 	# To be renamed and added as a scene into the world scene.
-	var builder_scene = load("res://src/world/terrain/chunk_manager.gd")
-	var builder = builder_scene.new()
 
-	var world_data = generator.generate_noise_terrain(WORLD_SEED, Vector2i(WORLD_WIDTH, WORLD_HEIGHT), CHUNK_SIZE)
-	chunks = builder.build_terrain(world_data)
+
+	var world_data = TerrainGenerator.generate_noise_terrain(WORLD_SEED, Vector2i(WORLD_WIDTH, WORLD_HEIGHT), CHUNK_SIZE)
+	chunks = chunk_manager.build_terrain(world_data)
 
 	# Add the chunks to the scene
 	for x in range(WORLD_WIDTH):
