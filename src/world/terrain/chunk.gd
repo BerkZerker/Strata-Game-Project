@@ -13,20 +13,29 @@ var chunk_size: int # Size of the chunk in pixels
 # Sets up the chunk's terrain data and size.
 # This should be called before the chunk is added to the tree, with 
 # the rest of the setup being done in the _ready() function
-func setup(chunk_data: Array, chunk_pos: Vector2i) -> void:
+func generate(chunk_data: Array, chunk_pos: Vector2i) -> void:
 	terrain_data = chunk_data
 	chunk_size = chunk_data.size() # Assuming square chunks
 	position = Vector2(chunk_pos.x * chunk_size, chunk_pos.y * chunk_size) # Global position
 
 
+# Should be called after generate, and after the scene is added to the tree. 
+func build() -> void:
+	_setup_area_2d()
+	_setup_collision_shapes()
+	_setup_visual_mesh()
+
+
 # Since arrays are passed by reference, any changes I make to the terrain data
 # outside of this script should be reflected on the terrain_data. This means
 # all this function has to do is refresh the collision shapes and the visual mesh.
-func refresh() -> void:
-	pass
+func rebuild() -> void:
+	_setup_collision_shapes()
+	_setup_visual_mesh()
 
 
 # Go ahead and run setup for the scene
+# I think I'll want to do this manually and not in the ready function.
 func _ready() -> void:
 	_setup_area_2d() # For detecting when to activate the chunk
 	_setup_collision_shapes() # Sets up the collision shapes for the chunk (disabled by default)

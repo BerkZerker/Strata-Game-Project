@@ -1,8 +1,9 @@
-class_name TerrainGenerator extends Node
+extends Node
 
+var chunk_size: int
 
 # Generates some terrain data based on noise.
-static func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) -> Array:
+func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: int) -> Array:
 	# Set up some noise for the terrain generation
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
@@ -42,3 +43,22 @@ static func generate_noise_terrain(world_seed: int, size: Vector2i, chunk_size: 
 		cell_number += 1
 		
 	return terrain_data
+
+
+# func generate_chunk(chunk_pos: Vector2i) -> Array:
+# 	var chunk = []
+# 	for i in range(chunk_size):
+# 		chunk.append([])
+# 		for j in range(chunk_size):
+# 			var value = 1 # noise.get_noise_2d(float(chunk_pos.x * chunk_size + j), float(chunk_pos.y * chunk_size + i))
+# 			# Santize the value to be an int - solid is 1 air is 0
+# 			if value > 0.3:
+# 				value = 3 # Stone
+# 			elif value > 0.15:
+# 				value = 1 # Dirt
+# 			elif value > 0.1:
+# 				value = 2 # Grass
+# 			else:
+# 				value = 0
+# 			chunk[i].append([value, cell_number]) # DEBUG TEMP
+# 	return chunk

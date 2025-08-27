@@ -16,15 +16,12 @@ var mouse_button: String = "none"
 func _ready() -> void:
 	# Generate the terrain data and build the chunks
 	# To be renamed and added as a scene into the world scene.
-
-
-	var world_data = TerrainGenerator.generate_noise_terrain(WORLD_SEED, Vector2i(WORLD_WIDTH, WORLD_HEIGHT), CHUNK_SIZE)
-	chunks = chunk_manager.build_terrain(world_data)
-
-	# Add the chunks to the scene
-	for x in range(WORLD_WIDTH):
-		for y in range(WORLD_HEIGHT):
-			add_child(chunks[x][y])
+	#var world_data = TerrainGenerator.generate_noise_terrain(WORLD_SEED, Vector2i(WORLD_WIDTH, WORLD_HEIGHT), CHUNK_SIZE)
+	chunk_manager.chunk_size = CHUNK_SIZE
+	chunk_manager.world_width = WORLD_WIDTH
+	chunk_manager.world_height = WORLD_HEIGHT
+	chunk_manager.world_seed = WORLD_SEED
+	chunk_manager.generate_world()
 
 
 # ALl of this is highly sketch

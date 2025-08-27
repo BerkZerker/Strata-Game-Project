@@ -1,10 +1,8 @@
 # TODO List
 
-- Fix the stupid player.gd file and write my own collision logic. This should handle gravity, velocity, jumping, collisions, step up on blocks, and coyote jump.
+- Add chunk_manager scene and add it to the world. It handles the threaded loading and unloading of chunks. This file will also be in charge of generating the chunk data. This may mean I should make the generator a static function. NOTE that I still want terrain_generator to be seperate, maybe keep it in the world scene.
 
-- Create an input manager node as part of the game scene. This should be able to talk to the player and world scenes.
-
-- Add chunk_manager scene and add it to the world. It handles the threaded loading and unloading of chunks. This file will also be in charge of generating the chunk data. This may mean I should make the generator a static function.
+- Fix the stupid player.gd file and write my own collision logic. This should handle gravity, velocity, jumping, collisions, step up on blocks, and coyote jump. I need to figure out how to handle input.
 
 - World scene and script cleanup
 
