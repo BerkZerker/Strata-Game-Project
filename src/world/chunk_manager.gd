@@ -9,6 +9,9 @@ var world_width: int
 var world_height: int
 var world_seed: int
 
+func _ready() -> void:
+	var generator
+
 
 # Function to build the terrain from the generated data - returns a 2d array of chunk instances.
 func generate_world(terrain_data: Array) -> void:
