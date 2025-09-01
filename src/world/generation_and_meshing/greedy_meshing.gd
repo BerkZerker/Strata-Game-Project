@@ -1,5 +1,4 @@
-class_name GreedyMeshing
-extends Node
+class_name GreedyMeshing extends RefCounted
 
 # Function to perform greedy meshing on a 2D array
 # Returns an array of Rect2 objects representing the meshed rectangles

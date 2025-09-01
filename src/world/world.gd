@@ -1,26 +1,19 @@
-extends Node2D
+class_name World extends Node2D
 
-# Variables 
-@export var CHUNK_SIZE: int = 64 # how many blocks per chunk
-@export var WORLD_WIDTH: int = 10 # in chunks
-@export var WORLD_HEIGHT: int = 10 # in chunks
-@export var WORLD_SEED: int = randi() % 100000 # Random seed for the world generation
 
 @onready var chunk_manager = $ChunkManager
 
-var chunks: Array
+# Temp
 var pressed: bool = false
 var mouse_button: String = "none"
 
 # Runs when the node is added to the scene
 func _ready() -> void:
-	# Generate the terrain data and build the chunks
-	# To be renamed and added as a scene into the world scene.
-	#var world_data = TerrainGenerator.generate_noise_terrain(WORLD_SEED, Vector2i(WORLD_WIDTH, WORLD_HEIGHT), CHUNK_SIZE)
+	# Pass the variables to the chunk_manager to build the world	
 	chunk_manager.chunk_size = CHUNK_SIZE
-	chunk_manager.world_width = WORLD_WIDTH
-	chunk_manager.world_height = WORLD_HEIGHT
+	chunk_manager.lod_distance = LOD_DISTANCE
 	chunk_manager.world_seed = WORLD_SEED
+
 	chunk_manager.generate_world()
 
 

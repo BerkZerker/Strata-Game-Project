@@ -1,4 +1,4 @@
-extends CharacterBody2D
+class_name Player extends CharacterBody2D
 
 @export var SPEED: int = 100
 @export var JUMP_VELOCITY: int = -250
