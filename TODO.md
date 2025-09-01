@@ -10,7 +10,7 @@
 
       - TerrainGenerator - generates the terrain data for each chunk.
 
-  - Player - the main player, inventory, player data, etc. I will emit a signal when the player crosses a chunk boundary which will be used for chunk loading and unloading.
+  - Player - the main player, inventory, player data, etc. I will emit a signal when the player crosses a chunk boundary which will be used for chunk loading and unloading. NOTE - how will the player know when it crosses a chunk boundary?
 
 - Fix the stupid player.gd file and write my own collision logic or look for alternative solutions. This should handle gravity, velocity, jumping, collisions, step up on blocks, and coyote jump. I need to figure out how to handle input.
 
