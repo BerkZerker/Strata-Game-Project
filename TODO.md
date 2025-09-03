@@ -1,7 +1,7 @@
 # TODO List
 
 - SignalBus - an autoload singleton with all signals defined inside. This will be what the player and ChunkManager use to comunicate.
-- GameSettings - an autoload singleton with variables such as CHUNK_SIZE and other engine/game wide variables.
+- GameSettings - an autoload singleton with variables such as CHUNK_SIZE and other engine/game wide variables. NOTE to add BLOCK_SIZE to this as well and integrate it into the calculations.
 
 - GameInstance - the main game instance - holds the game, the ui, etc.
 
