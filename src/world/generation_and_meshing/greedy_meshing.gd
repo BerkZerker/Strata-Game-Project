@@ -22,7 +22,7 @@ static func mesh(grid: Array) -> Array:
 			if visited[y][x] or grid[y][x][0] == 0: # Skip if already visited or empty
 				continue
 			
-			# Find the width of the rectangle using all block IDs that are not 0 (air)
+			# Find the width of the rectangle using all tile IDs that are not 0 (air)
 			var rect_width = 1
 			while x + rect_width < width and grid[y][x + rect_width][0] != 0 and not visited[y][x + rect_width]:
 				rect_width += 1

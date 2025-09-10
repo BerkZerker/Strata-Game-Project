@@ -1,13 +1,13 @@
 class_name Chunk extends Node2D
 
-@export var CHUNK_PADDING: int = 64 # How many blocks to pad the chunk by to detect entities
+@export var CHUNK_PADDING: int = 64 # How many tiles to pad the chunk by to detect entities
 
 @onready var visual_mesh: MeshInstance2D = $TerrainMesh
 @onready var area_2d: Area2D = $Area2D
 @onready var static_body: StaticBody2D = $StaticBody2D
 
 var terrain_data: Array = []
-var chunk_size: int # Size of the chunk in pixels, each block is 1px
+var chunk_size: int # Size of the chunk in tiles
 
 
 # Constructor
@@ -84,10 +84,10 @@ func _setup_visual_mesh():
 	for x in range(chunk_size):
 		for y in range(chunk_size):
 			# Encode the terrain data into the color channels
-			var block_id = float(terrain_data[-y - 1][x][0]) # 0th index is block id
-			var cell_id = float(terrain_data[-y - 1][x][1]) # 1st index is the cell the block belongs to
-			
-			var pixel_data = Color(block_id / 255.0, cell_id / 255.0, 0, 0) # Encodes the values into the color channels
+			var tile_id = float(terrain_data[-y - 1][x][0]) # 0th index is tile id
+			var cell_id = float(terrain_data[-y - 1][x][1]) # 1st index is the cell the tile belongs to
+
+			var pixel_data = Color(tile_id / 255.0, cell_id / 255.0, 0, 0) # Encodes the values into the color channels
 			image.set_pixel(x, y, pixel_data)
 
 	var data_texture = ImageTexture.create_from_image(image)

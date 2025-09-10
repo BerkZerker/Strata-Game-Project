@@ -2,7 +2,7 @@ class_name ChunkManager extends Node2D
 
 
 # Variables  MOVED HERE FROM WORLD
-@export var CHUNK_SIZE: int = 64 # how many blocks per chunk
+@export var CHUNK_SIZE: int = 64 # how tiles wide and tall a chunk is
 @export var LOD_DISTANCE: int = 10 # in chunks
 @export var WORLD_SEED: int = randi() % 100000 # Random seed for the world generation
 
@@ -16,7 +16,7 @@ var terrain_generator: TerrainGenerator
 # Function to build the terrain from the generated data - returns a 2d array of chunk instances.
 func generate_world() -> void:
 	# Set up the generator
-	terrain_generator = TerrainGenerator.new(world_seed, chunk_size)
+	terrain_generator = TerrainGenerator.new(world_seed)
 
 	# Set up the chunks array and calculate the world size (in chunks)
 	var width = terrain_data.size()

@@ -13,9 +13,11 @@ class_name Player extends CharacterBody2D
 @onready var coyote_timer: Timer = $CoyoteTimer
 
 var was_on_floor: bool = false
+var current_chunk: Vector2i
 
 func _ready() -> void:
 	coyote_timer.wait_time = COYOTE_TIME
+	current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)) # Calculate initial chunk position
 
 
 func _physics_process(delta: float) -> void:
@@ -37,6 +39,10 @@ func _physics_process(delta: float) -> void:
 
 	# Move the player.
 	move_and_slide()
+
+	if current_chunk != Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)):
+		current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE))
+		SignalBus.emit_signal("player_chunk_changed", current_chunk)
 	
 	# Just write my own collision logic since this is such a specialized geometry
 	# I can reuse much of what I already have, such as coyote jump, and the wall step but 
