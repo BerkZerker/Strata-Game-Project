@@ -17,6 +17,9 @@ func _init(chunk_data: Array, chunk_pos: Vector2i) -> void:
 	position = Vector2(chunk_pos.x * chunk_size, chunk_pos.y * chunk_size)
 
 
+func _ready() -> void:
+	build()
+
 # Should be called after the node is initialized and added to the tree. 
 # Should only be called once, after that use rebuild()
 func build() -> void:

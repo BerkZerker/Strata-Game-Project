@@ -14,7 +14,7 @@
 
 ## Current Working Files
 
-- chunk_manager.gd, chunk.gd, terrain_generator.gd
+- chunk_manager.gd, chunk.gd - mainly chunk, get it working with the new chunk manager. Then add multithreading for chunk updates.
 
 ## Next Tasks
 

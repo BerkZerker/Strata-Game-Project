@@ -13,11 +13,11 @@ class_name Player extends CharacterBody2D
 @onready var coyote_timer: Timer = $CoyoteTimer
 
 var was_on_floor: bool = false
-var current_chunk: Vector2i
+var current_chunk: Vector2i = Vector2i.ZERO
 
 func _ready() -> void:
 	coyote_timer.wait_time = COYOTE_TIME
-	current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)) # Calculate initial chunk position
+	#current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)) # Calculate initial chunk position
 
 
 func _physics_process(delta: float) -> void:
