@@ -3,6 +3,8 @@ class_name ChunkManager extends Node2D
 # Variables
 @export var WORLD_SEED: int = randi() % 1000000 # Random seed for the world generation
 
+const CHUNK_SCENE: PackedScene = preload("uid://dbbq2vtjx0w0y")
+
 var chunks: Dictionary
 var terrain_generator: TerrainGenerator
 
@@ -42,16 +44,25 @@ func _on_player_chunk_changed(new_chunk_pos: Vector2i) -> void:
 			
 			# Skip if chunk already exists
 			if chunks.has(pos):
-				continue
+				# Chunk already exists, check if it needs to be enabled/disabled based on distance
+				var distance = pos.distance_to(new_chunk_pos)
+				if distance <= 2:
+					print('yes')
+					chunks[pos].enable_collision()
+				else:
+					print('no')
+					chunks[pos].disable_collision()
 			else:
 				# Generate new chunk
 				var chunk_data = terrain_generator.generate_chunk(pos)
-				var new_chunk = Chunk.new(chunk_data, pos)
+				var new_chunk = CHUNK_SCENE.instantiate()
+				new_chunk.generate(chunk_data, pos)
 				# Handle enabling/disabling based on distance if needed here
 				
 				# Add to chunks dictionary and scene tree
 				chunks[pos] = new_chunk
 				add_child(new_chunk)
+				new_chunk.build()
 
 	
 # # Helper function to convert Vector2i to string key

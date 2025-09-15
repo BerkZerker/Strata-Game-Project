@@ -1,32 +1,29 @@
 class_name Chunk extends Node2D
 
-@onready var visual_mesh: MeshInstance2D = $TerrainMesh
 @onready var static_body: StaticBody2D = $StaticBody2D
+@onready var visual_mesh: MeshInstance2D = $TerrainMesh
 
 var terrain_data: Array = []
 var chunk_size: int # Size of the chunk in tiles
 
 
 # Constructor
-func _init(chunk_data: Array, chunk_pos: Vector2i) -> void:
+func generate(chunk_data: Array, chunk_pos: Vector2i) -> void:
 	terrain_data = chunk_data # Just a reference, not a copy. More memory efficient
 	chunk_size = chunk_data.size() # Assuming square chunks
 	position = Vector2(chunk_pos.x * chunk_size, chunk_pos.y * chunk_size)
 
 
-func _ready() -> void:
-	build()
-
 # Should be called after the node is initialized and added to the tree. 
 # Should only be called once, after that use rebuild()
 func build() -> void:
-	_setup_collision_shapes()
-	_setup_visual_mesh()
+	setup_collision_shapes()
+	setup_visual_mesh()
 
 
 # Helper function to setup the collision shapes.
 # This starts with the shapes disabled.
-func _setup_collision_shapes() -> void:
+func setup_collision_shapes() -> void:
 	# Run greedy meshing on the local copy of the terrain data
 	var shapes = GreedyMeshing.mesh(terrain_data)
 
@@ -36,11 +33,11 @@ func _setup_collision_shapes() -> void:
 
 	# And setup the shapes
 	for shape in shapes:
-		shape.set_deferred("disabled", true)
 		static_body.add_child(shape)
 
 
-func _setup_visual_mesh():
+# Sets up the mesh and shader data to draw the chunk.
+func setup_visual_mesh():
 	var quad_mesh = QuadMesh.new()
 	quad_mesh.size = Vector2(chunk_size, chunk_size)
 	visual_mesh.mesh = quad_mesh # Assign the mesh to our MeshInstance2D node
@@ -59,3 +56,13 @@ func _setup_visual_mesh():
 
 	var data_texture = ImageTexture.create_from_image(image)
 	visual_mesh.material.set_shader_parameter("chunk_data_texture", data_texture)
+
+
+# Disables the collision shapes 
+func disable_collision() -> void:
+	static_body.set_deferred("process_mode", Node.PROCESS_MODE_DISABLED)
+
+
+# Enables the collision shapes
+func enable_collision() -> void:
+	static_body.set_deferred("process_mode", Node.PROCESS_MODE_INHERIT)
