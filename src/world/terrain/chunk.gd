@@ -60,9 +60,13 @@ func setup_visual_mesh():
 
 # Disables the collision shapes 
 func disable_collision() -> void:
-	static_body.set_deferred("process_mode", Node.PROCESS_MODE_DISABLED)
+	#static_body.set_deferred("process_mode", Node.PROCESS_MODE_DISABLED)
+	for child in static_body.get_children():
+		child.set_deferred("disabled", true)
 
 
 # Enables the collision shapes
 func enable_collision() -> void:
-	static_body.set_deferred("process_mode", Node.PROCESS_MODE_INHERIT)
+	#static_body.set_deferred("process_mode", Node.PROCESS_MODE_INHERIT)
+	for child in static_body.get_children():
+		child.set_deferred("disabled", false)

@@ -18,12 +18,13 @@ func _ready() -> void:
 	SignalBus.player_chunk_changed.connect(_on_player_chunk_changed)
 
 
-func _on_player_chunk_changed(new_chunk_pos: Vector2i) -> void:
+func _on_player_chunk_changed(new_player_pos: Vector2i) -> void:
 	# Calculate the bounds of chunks that should be loaded
-	var min_x = new_chunk_pos.x - GlobalSettings.LOD_RADIUS
-	var max_x = new_chunk_pos.x + GlobalSettings.LOD_RADIUS
-	var min_y = new_chunk_pos.y - GlobalSettings.LOD_RADIUS
-	var max_y = new_chunk_pos.y + GlobalSettings.LOD_RADIUS
+	var min_x = new_player_pos.x - GlobalSettings.LOAD_RADIUS
+	var max_x = new_player_pos.x + GlobalSettings.LOAD_RADIUS
+	var min_y = new_player_pos.y - GlobalSettings.LOAD_RADIUS
+	var max_y = new_player_pos.y + GlobalSettings.LOAD_RADIUS
+
 	
 	# First, unload chunks that are too far away
 	var chunks_to_remove = []
@@ -37,70 +38,29 @@ func _on_player_chunk_changed(new_chunk_pos: Vector2i) -> void:
 		chunks[chunk_pos].queue_free()
 		chunks.erase(chunk_pos)
 
+	# Calculate the bounds to enable collision shapes
+	var collision_min_x = new_player_pos.x - GlobalSettings.COLLISION_RADIUS
+	var collision_max_x = new_player_pos.x + GlobalSettings.COLLISION_RADIUS
+	var collision_min_y = new_player_pos.y - GlobalSettings.COLLISION_RADIUS
+	var collision_max_y = new_player_pos.y + GlobalSettings.COLLISION_RADIUS
+
 	# Generate new chunks within radius
 	for x in range(min_x, max_x + 1):
 		for y in range(min_y, max_y + 1):
 			var pos = Vector2i(x, y)
-			
-			# Skip if chunk already exists
-			if chunks.has(pos):
-				# Chunk already exists, check if it needs to be enabled/disabled based on distance
-				var distance = pos.distance_to(new_chunk_pos)
-				if distance <= 2:
-					print('yes')
-					chunks[pos].enable_collision()
-				else:
-					print('no')
-					chunks[pos].disable_collision()
-			else:
+
+			# Check if chunk doesn't exist and create it
+			if not chunks.has(pos):
 				# Generate new chunk
 				var chunk_data = terrain_generator.generate_chunk(pos)
 				var new_chunk = CHUNK_SCENE.instantiate()
 				new_chunk.generate(chunk_data, pos)
-				# Handle enabling/disabling based on distance if needed here
-				
-				# Add to chunks dictionary and scene tree
 				chunks[pos] = new_chunk
 				add_child(new_chunk)
 				new_chunk.build()
 
-	
-# # Helper function to convert Vector2i to string key
-# func vec2i_to_str(vec: Vector2i) -> String:
-# 	return "%d,%d" % [vec.x, vec.y]
-
-
-# # Helper function to convert string key back to Vector2i
-# func str_to_vec2i(pos_str: String) -> Vector2i:
-# 	var parts = pos_str.split(",")
-# 	return Vector2i(int(parts[0]), int(parts[1]))
-
-
-# Function to build the terrain from the generated data - returns a 2d array of chunk instances.
-# func generate_world() -> void:
-# 	# Set up the generator
-# 	terrain_generator = TerrainGenerator.new(world_seed)
-# 	# Set up the chunks array and calculate the world size (in chunks)
-# 	var width = terrain_data.size()
-# 	var height = terrain_data[0].size()
-# 	# Loop through the chunks and mesh them
-# 	for x in range(width):
-# 		chunks.append([])
-# 		for y in range(height):
-# 			# Build the chunk using the terrain data and the chunk's position
-# 			var chunk = Chunk.new(terrain_data[x][y], Vector2i(x, y))
-# 			# Add it to the chunks array. This can be indexed with an x & y coordinate pair
-# 			chunks[x].append(chunk)
-# 	# Add the chunks to the scene
-# 	for x in range(width):
-# 		for y in range(height):
-# 			add_child(chunks[x][y])
-# 	# build the chunks
-# 	build_chunks()
-# func build_chunks() -> void:
-# 	for x in range(chunks.size()):
-# 		for y in range(chunks[x].size()):
-# 			chunks[x][y].build()
-# func generate_chunk() -> generates the chunk data and sets up a new chunk scene
-# func build_chunk() -> sets up the collision shapes and visual mesh
-# func rebuild_chunk() -> rebuilds the chunk's visual mesh and collision shapes
+			# Enable or disable collision based on distance to player
+			if pos.x >= collision_min_x and pos.x <= collision_max_x and pos.y >= collision_min_y and pos.y <= collision_max_y:
+				chunks[pos].enable_collision()
+			else:
+				chunks[pos].disable_collision()

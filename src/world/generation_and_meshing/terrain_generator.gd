@@ -23,8 +23,8 @@ func generate_chunk(chunk_pos: Vector2i) -> Array:
 	for i in range(GlobalSettings.CHUNK_SIZE):
 		chunk.append([])
 		for j in range(GlobalSettings.CHUNK_SIZE):
-			# Get the noise value for this position
-			var value = noise.get_noise_2d(float(chunk_pos.x * GlobalSettings.CHUNK_SIZE + i), float(chunk_pos.y * GlobalSettings.CHUNK_SIZE + j))
+			# Get the noise value for this position (i & j are reversed, don't ask why, nobody knows)
+			var value = noise.get_noise_2d(float(chunk_pos.x * GlobalSettings.CHUNK_SIZE + j), float(chunk_pos.y * GlobalSettings.CHUNK_SIZE + i))
 
 			# Santize the value to be an int - solid is 1 air is 0
 			if value > 0.3:

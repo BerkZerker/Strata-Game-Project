@@ -1,24 +1,12 @@
 # TODO List
 
-## Scene Structure
-
-- GameInstance - the main game instance - holds the game, the ui, etc.
-
-  - World - the main stage for all in-game objects. Just a container for now (Node2D).
-
-    - ChunkManager - handles the loading and unloading of chunks, as well as the generation of chunk data. For now this will hold it's own variables that determine world generation. Using the player's signal for crossing chunk boundaries, it will load and unload chunks and handle activation and deactivation of the collision shapes.
-
-      - TerrainGenerator - generates the terrain data for each chunk.
-
-  - Player - the main player, inventory, player data, etc. I will emit a signal when the player crosses a chunk boundary which will be used for chunk loading and unloading. NOTE - how will the player know when it crosses a chunk boundary?
-
 ## Current Working Files
 
-- chunk_manager.gd, chunk.gd - mainly chunk, get it working with the new chunk manager. Then add multithreading for chunk updates.
+- N/A
 
 ## Next Tasks
 
-- Get the chunk_manager to load and unload chunks based on the player's position. This will use a signal via the signal_bus.gd when the player crosses a chunk boundary. The chunk manager will then load and unload chunks based on the LOD_RADIUS variable in global_settings.gd. the chunk_manager will also handle activating and deactivating the collision shapes for the chunks based on the player's position, as well as using the terrain_generator to generate the terrain data on the fly for each chunk.
+- Optimize chunk management and add multithreading for chunk updates. Re-implement basic editing functions.
 
 - Re-implement TILE_SIZE and update all relavant code - note the shader especally will be difficult.
 

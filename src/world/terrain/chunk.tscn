@@ -18,9 +18,7 @@ shader_parameter/texture_size = Vector2(32, 32)
 script = ExtResource("1_bwt5w")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
-process_mode = 4
 collision_mask = 0
 
 [node name="TerrainMesh" type="MeshInstance2D" parent="."]
-visible = false
 material = SubResource("ShaderMaterial_itscw")
