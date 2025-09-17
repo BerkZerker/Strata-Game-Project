@@ -5,6 +5,8 @@ class_name Player extends CharacterBody2D
 @export var STEP_HEIGHT: int = 3
 @export var COYOTE_TIME: float = 0.2
 @export var ZOOM_AMOUNT: float = 0.1
+@export var MINIMUM_ZOOM: Vector2 = Vector2(0.001, 0.001)
+@export var MAXIMUM_ZOOM: Vector2 = Vector2(100, 100)
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var camera: Camera2D = $Camera2D
@@ -79,12 +81,18 @@ func _input(event: InputEvent) -> void:
 	# Handle zoom
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			camera.zoom.x += ZOOM_AMOUNT
-			camera.zoom.y += ZOOM_AMOUNT
+			camera.zoom.x *= 1 + ZOOM_AMOUNT
+			camera.zoom.y *= 1 + ZOOM_AMOUNT
+			# Make sure the camera zoom doesn't zoom too far
+			if camera.zoom > MAXIMUM_ZOOM:
+				camera.zoom = MAXIMUM_ZOOM
 
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			camera.zoom.x -= ZOOM_AMOUNT
-			camera.zoom.y -= ZOOM_AMOUNT
+			camera.zoom.x *= 1 - ZOOM_AMOUNT
+			camera.zoom.y *= 1 - ZOOM_AMOUNT
+			# Make sure the zoom isn't 0
+			if camera.zoom < MINIMUM_ZOOM:
+				camera.zoom = MINIMUM_ZOOM
 
 	# Handle jump
 	if Input.is_action_just_pressed("jump") and (is_on_floor() or not coyote_timer.is_stopped()):
