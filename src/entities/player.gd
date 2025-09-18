@@ -2,7 +2,7 @@ class_name Player extends CharacterBody2D
 
 @export var SPEED: int = 100
 @export var JUMP_VELOCITY: int = -250
-@export var STEP_HEIGHT: int = 3
+@export var STEP_HEIGHT: int = 8
 @export var COYOTE_TIME: float = 0.2
 @export var ZOOM_AMOUNT: float = 0.1
 @export var MINIMUM_ZOOM: Vector2 = Vector2(0.001, 0.001)
