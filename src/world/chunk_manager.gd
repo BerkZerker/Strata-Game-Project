@@ -3,18 +3,55 @@ class_name ChunkManager extends Node2D
 # Variables
 @export var WORLD_SEED: int = randi() % 1000000 # Random seed for the world generation
 
-var chunks: Dictionary
-var terrain_generator: TerrainGenerator
+var chunks: Dictionary = {}
+
+var _terrain_generator: TerrainGenerator
+var _thread: Thread
+var _mutex: Mutex
+var _semaphore: Semaphore
+
+var _generation_queue: Array[Vector2i] = []
+var _removal_queue: Array[Vector2i] = []
 
 
 # Setup the chunk manager
 func _ready() -> void:
-	chunks = {}
-	terrain_generator = TerrainGenerator.new(WORLD_SEED)
+	_terrain_generator = TerrainGenerator.new(WORLD_SEED)
+
+	_mutex = Mutex.new()
+	_semaphore = Semaphore.new()
+	_thread = Thread.new()
+	_thread.start(_process_chunk_updates)
 
 	# Connect to player chunk changed signal
 	SignalBus.player_chunk_changed.connect(_on_player_chunk_changed)
 
+
+func _process_chunk_updates() -> void:
+	while true:
+		_semaphore.wait()
+		_mutex.lock()
+		# Process chunk updates here if needed
+		# Do all looping over the queues and updates to the arrays inside the mutex lock
+
+		for pos in _removal_queue:
+			if chunks.has(pos):
+				chunks[pos].call_deferred("queue_free")
+				chunks.erase(pos)
+		_removal_queue.clear()
+
+		for pos in _generation_queue:
+			var chunk_data = _terrain_generator.generate_chunk(pos)
+			var chunk_scene = load("uid://dbbq2vtjx0w0y")
+			var new_chunk = chunk_scene.instantiate()
+			new_chunk.generate(chunk_data, pos)
+			new_chunk.build()
+			chunks[pos] = new_chunk
+			call_deferred("add_child", new_chunk)
+		_generation_queue.clear()
+
+		_mutex.unlock()
+		
 
 func _on_player_chunk_changed(new_player_pos: Vector2i) -> void:
 	# Calculate the bounds of chunks that should be loaded
@@ -23,18 +60,13 @@ func _on_player_chunk_changed(new_player_pos: Vector2i) -> void:
 	var min_y = new_player_pos.y - GlobalSettings.LOAD_RADIUS
 	var max_y = new_player_pos.y + GlobalSettings.LOAD_RADIUS
 
-	
-	# First, unload chunks that are too far away
-	var chunks_to_remove = []
+	# Add chunks to removal queue if they are out of bounds
 	for chunk_pos in chunks:
 		if chunk_pos.x < min_x or chunk_pos.x > max_x or chunk_pos.y < min_y or chunk_pos.y > max_y:
 			# Queue chunk for removal
-			chunks_to_remove.append(chunk_pos)
-	
-	# Remove the chunks outside radius
-	for chunk_pos in chunks_to_remove:
-		chunks[chunk_pos].queue_free()
-		chunks.erase(chunk_pos)
+			_mutex.lock()
+			_removal_queue.append(chunk_pos)
+			_mutex.unlock()
 
 	# Calculate the bounds to enable collision shapes
 	var collision_min_x = new_player_pos.x - GlobalSettings.COLLISION_RADIUS
@@ -50,16 +82,14 @@ func _on_player_chunk_changed(new_player_pos: Vector2i) -> void:
 			# Check if chunk doesn't exist and create it
 			if not chunks.has(pos):
 				# Generate new chunk
-				var chunk_data = terrain_generator.generate_chunk(pos)
-				var chunk_scene = load("uid://dbbq2vtjx0w0y")
-				var new_chunk = chunk_scene.instantiate()
-				new_chunk.generate(chunk_data, pos)
-				new_chunk.build()
-				chunks[pos] = new_chunk
-				add_child(new_chunk)
-
-			# Enable or disable collision based on distance to player
-			if pos.x >= collision_min_x and pos.x <= collision_max_x and pos.y >= collision_min_y and pos.y <= collision_max_y:
-				chunks[pos].enable_collision()
+				_mutex.lock()
+				_generation_queue.append(pos)
+				_mutex.unlock()
 			else:
-				chunks[pos].disable_collision()
+				# Enable or disable collision based on distance to player
+				if pos.x >= collision_min_x and pos.x <= collision_max_x and pos.y >= collision_min_y and pos.y <= collision_max_y:
+					chunks[pos].enable_collision()
+				else:
+					chunks[pos].disable_collision()
+	
+	_semaphore.post()
