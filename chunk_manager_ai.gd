@@ -1,4 +1,4 @@
-class_name ChunkManager2 extends Node2D
+class_name ChunkManagerAI extends Node2D
 
 # Variables
 @export var WORLD_SEED: int = randi() % 1000000 # Random seed for the world generation
