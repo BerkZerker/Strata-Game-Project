@@ -12,6 +12,8 @@
 
 - Fix the stupid player.gd file and write my own collision logic or look for alternative solutions. This should handle gravity, velocity, jumping, collisions, step up on tiles, and coyote jump. I need to figure out how to handle input.
 
+- Check my code and make private variables start with an underscore.
+
 - Update `README.md` and add some basic documentation and at least 1 screenshot.
 
 - Research algorithms to generate tessellating shapes as cells in the terrain using data driver attributes such as roughness, scale variance, and starting shape. Maybe voronoi diagrams & Lloyd's relaxation?

@@ -95,7 +95,7 @@ func _input(event: InputEvent) -> void:
 				camera.zoom = MINIMUM_ZOOM
 
 	# Handle jump
-	if Input.is_action_just_pressed("jump") and (is_on_floor() or not coyote_timer.is_stopped()):
+	if Input.is_action_just_pressed("jump"):# and (is_on_floor() or not coyote_timer.is_stopped()):
 		velocity.y = JUMP_VELOCITY
 		coyote_timer.stop()
 
