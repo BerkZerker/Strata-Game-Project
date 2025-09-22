@@ -6,7 +6,9 @@
 
 ## Next Tasks
 
-- Optimize chunk management and add multithreading for chunk updates. Re-implement basic editing functions.
+- Add my own physics check directly against the voxel data for the player instead of using Godot's built-in physics. This will allow for more precise control and avoid issues with fast movement through thin objects.
+
+- Optimize chunk management and add multithreading for chunk updates. Re-implement basic editing functions. Debug chunk loading and unloading.
 
 - Re-implement TILE_SIZE and update all relavant code - note the shader especally will be difficult.
 
