@@ -31,10 +31,6 @@ func _ready() -> void:
 	# Connect to player chunk changed signal
 	SignalBus.player_chunk_changed.connect(_on_player_chunk_changed)
 
-	# Pre-instantiate a pool of chunks for recycling
-	setup_chunk_pool()
-
-
 func _process(_delta: float) -> void:
 	# Process a limited number of chunks from the build queue each frame
 	var builds_this_frame = 0
@@ -56,8 +52,9 @@ func _process(_delta: float) -> void:
 				chunk = _chunk_pool.pop_back()
 			else:
 				# Slow but necessary as a failsafe
-				chunk = CHUNK_SCENE.instantiate() as Chunk
+				chunk = CHUNK_SCENE.instantiate()
 				add_child(chunk)
+				pass
 
 			chunk.generate(terrain_data, collision_shapes, chunk_pos)
 			chunk.build()
@@ -99,6 +96,9 @@ func _process_chunk_updates() -> void:
 # Gracefully stop the thread when the node is removed from the scene tree
 func _exit_tree():
 	_mutex.lock()
+	_generation_queue.clear()
+	_build_queue.clear()
+	_chunk_pool.clear()
 	_thread_alive = false # Tell the thread it can shut down permanently
 	_mutex.unlock()
 	_semaphore.post() # Wake the thread if it's waiting
