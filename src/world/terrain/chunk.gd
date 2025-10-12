@@ -10,20 +10,20 @@ var terrain_data: Array = []
 
 func generate(chunk_data: Array, collision_shapes: Array, chunk_pos: Vector2i) -> void:
 	terrain_data = chunk_data # Just a reference, not a copy. More memory efficient
-	_collision_shapes = collision_shapes
+	#_collision_shapes = collision_shapes
 	position = Vector2(chunk_pos.x * GlobalSettings.CHUNK_SIZE, chunk_pos.y * GlobalSettings.CHUNK_SIZE)
 
 
 func build() -> void:
-	setup_collision_shapes()
+	#setup_collision_shapes()
 	setup_visual_mesh()
 	visible = true
 
 
 func disable() -> void:
 	# Disable the chunk visually and physically
-	visible = false
-	disable_collision()
+	visible = true
+	#disable_collision()
 
 
 # Helper function to setup the collision shapes.

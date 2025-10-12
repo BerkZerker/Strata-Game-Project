@@ -24,23 +24,21 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	# Add the gravity.
-	if not is_on_floor():
-		velocity += get_gravity() * delta
-		
-		# Start coyote timer when walking off a ledge
-		if was_on_floor and coyote_timer.is_stopped():
-			coyote_timer.start()
-	else:
-		# Reset coyote timer when on floor
-		coyote_timer.stop()
-		
-	was_on_floor = is_on_floor() # Update floor state
-
-	# Handle stepping up slopes
-	handle_step_up()
-
-	# Move the player.
-	move_and_slide()
+	# if not is_on_floor():
+	# 	velocity += get_gravity() * delta
+	# 	# Start coyote timer when walking off a ledge
+	# 	if was_on_floor and coyote_timer.is_stopped():
+	# 		coyote_timer.start()
+	# else:
+	# 	# Reset coyote timer when on floor
+	# 	coyote_timer.stop()
+	# was_on_floor = is_on_floor() # Update floor state
+	# # Handle stepping up slopes
+	# handle_step_up()
+	# # Move the player.
+	# move_and_slide()
+	position.x += velocity.x * delta
+	position.y += velocity.y * delta
 
 	if current_chunk != Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)):
 		current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE))
@@ -95,9 +93,9 @@ func _input(event: InputEvent) -> void:
 				camera.zoom = MINIMUM_ZOOM
 
 	# Handle jump
-	if Input.is_action_just_pressed("jump"):# and (is_on_floor() or not coyote_timer.is_stopped()):
-		velocity.y = JUMP_VELOCITY
-		coyote_timer.stop()
+	# if Input.is_action_just_pressed("jump"): # and (is_on_floor() or not coyote_timer.is_stopped()):
+	# 	velocity.y = JUMP_VELOCITY
+	# 	coyote_timer.stop()
 
 	# Get the input direction and handle the movement/deceleration.
 	if Input.is_action_pressed("move_left"):
@@ -106,3 +104,10 @@ func _input(event: InputEvent) -> void:
 		velocity.x = SPEED
 	else:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
+
+	if Input.is_action_pressed("move_up"):
+		velocity.y = - SPEED
+	elif Input.is_action_pressed("move_down"):
+		velocity.y = SPEED
+	else:
+		velocity.y = move_toward(velocity.y, 0, SPEED)

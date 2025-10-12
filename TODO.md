@@ -6,6 +6,8 @@
 
 ## Next Tasks
 
+- Comment out all of the collision shape code and don't do any collisions. Remove the gravity and colision checks from the player.gd script and just use WSAD to move the player sprite and camera around. This will allow me to focus on the chunk generation and rendering without worrying about physics issues.
+
 - Add a check in the generate_queue and build_queue when adding new chunks to the generator pool, and when removing chunks that are out of range.
 
 - Restructure the game instance scene tree and add a game_instance.gd script to grab references to the player, chunk manager, and in the future other managers (UI, audio, entities, etc). This will make it easier to access these nodes from other scripts. Then just pass a reference (or use get_parent()?) to access the GameInstance scene in the player and chunk manager scripts as needed.

@@ -28,6 +28,8 @@ func _ready() -> void:
 	_thread = Thread.new()
 	_thread.start(_process_chunk_updates)
 
+	setup_chunk_pool()
+
 	# Connect to player chunk changed signal
 	SignalBus.player_chunk_changed.connect(_on_player_chunk_changed)
 
@@ -82,7 +84,7 @@ func _process_chunk_updates() -> void:
 			if not chunks.has(chunk_pos):
 				# Generate the data and collision shapes
 				var terrain_data = _terrain_generator.generate_chunk(chunk_pos)
-				var collision_shapes = GreedyMeshing.mesh(terrain_data)
+				var collision_shapes = [] # GreedyMeshing.mesh(terrain_data)
 
 				# Add to build queue
 				chunks_to_build.append([chunk_pos, terrain_data, collision_shapes])
@@ -124,10 +126,10 @@ func _on_player_chunk_changed(new_player_pos: Vector2i) -> void:
 	var min_y = new_player_pos.y - GlobalSettings.LOAD_RADIUS
 	var max_y = new_player_pos.y + GlobalSettings.LOAD_RADIUS
 	# Calculate the bounds to enable collision shapes
-	var collision_min_x = new_player_pos.x - GlobalSettings.COLLISION_RADIUS
-	var collision_max_x = new_player_pos.x + GlobalSettings.COLLISION_RADIUS
-	var collision_min_y = new_player_pos.y - GlobalSettings.COLLISION_RADIUS
-	var collision_max_y = new_player_pos.y + GlobalSettings.COLLISION_RADIUS
+	# var collision_min_x = new_player_pos.x - GlobalSettings.COLLISION_RADIUS
+	# var collision_max_x = new_player_pos.x + GlobalSettings.COLLISION_RADIUS
+	# var collision_min_y = new_player_pos.y - GlobalSettings.COLLISION_RADIUS
+	# var collision_max_y = new_player_pos.y + GlobalSettings.COLLISION_RADIUS
 	
 	# First, unload chunks that are too far away
 	var chunks_to_remove = []
@@ -155,11 +157,11 @@ func _on_player_chunk_changed(new_player_pos: Vector2i) -> void:
 				chunks_to_generate.append(pos)
 
 			# Enable or disable collision based on distance to player
-			if chunks.has(pos): # Check if the chunk exists yet
-				if pos.x >= collision_min_x and pos.x <= collision_max_x and pos.y >= collision_min_y and pos.y <= collision_max_y:
-					chunks[pos].enable_collision()
-				else:
-					chunks[pos].disable_collision()
+			# if chunks.has(pos): # Check if the chunk exists yet
+			# 	if pos.x >= collision_min_x and pos.x <= collision_max_x and pos.y >= collision_min_y and pos.y <= collision_max_y:
+			# 		chunks[pos].enable_collision()
+			# 	else:
+			# 		chunks[pos].disable_collision()
 	
 	# Lock and update the generation queue
 	_mutex.lock()
