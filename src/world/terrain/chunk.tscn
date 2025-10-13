@@ -17,8 +17,5 @@ shader_parameter/texture_size = Vector2(32, 32)
 [node name="Chunk" type="Node2D"]
 script = ExtResource("1_bwt5w")
 
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-collision_mask = 0
-
 [node name="MeshInstance2D" type="MeshInstance2D" parent="."]
 material = SubResource("ShaderMaterial_nujw0")
