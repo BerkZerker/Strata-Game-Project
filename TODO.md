@@ -6,15 +6,15 @@
 
 ## Next Tasks
 
-- Add a check in the generate_queue and build_queue when adding new chunks to the generator pool, and when removing chunks that are out of range. UPDATE - generally fix the freaking generation and build queues to avoid backup, missed chunks, RAM overflow, and all the other generation issues.
-
 - Restructure the game instance scene tree and add a game_instance.gd script to grab references to the player, chunk manager, and in the future other managers (UI, audio, entities, etc). This will make it easier to access these nodes from other scripts. Then just pass a reference (or use get_parent()?) to access the GameInstance scene in the player and chunk manager scripts as needed.
 
-- Optimize chunk management and add multithreading for chunk updates. Re-implement basic editing functions. Debug chunk loading and unloading. UPDATE - finish this up.
+- Optimize chunk loading and unloading to use regions > chunks > cells. Do generation region by region, and generate a region of chunks at a time. This will let the worker thread actually have something to do and hopefully clean up some queue issues. Also clean up the queues.
 
 - Check my code and make private variables start with an underscore.
 
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
+
+- Re-implement basic editing.
 
 - Research algorithms to generate tessellating shapes as cells in the terrain using data driver attributes such as roughness, scale variance, and starting shape. Maybe voronoi diagrams & Lloyd's relaxation?
 

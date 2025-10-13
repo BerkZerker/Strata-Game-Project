@@ -133,7 +133,6 @@ func _on_player_chunk_changed(new_player_pos: Vector2i) -> void:
 	
 	# Lock and update the generation queue
 	_mutex.lock()
-	chunks_to_generate.sort() # See how this does lol I may have to sort by distance instead
 	_generation_queue += chunks_to_generate
 	_mutex.unlock()
 	# Signal the worker thread that there's work to do
