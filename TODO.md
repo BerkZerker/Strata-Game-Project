@@ -6,8 +6,6 @@
 
 ## Next Tasks
 
-- Restructure the game instance scene tree and add a game_instance.gd script to grab references to the player, chunk manager, and in the future other managers (UI, audio, entities, etc). This will make it easier to access these nodes from other scripts. Then just pass a reference (or use get_parent()?) to access the GameInstance scene in the player and chunk manager scripts as needed.
-
 - Optimize chunk loading and unloading to use regions > chunks > cells. Do generation region by region, and generate a region of chunks at a time. This will let the worker thread actually have something to do and hopefully clean up some queue issues. Also clean up the queues.
 
 - Check my code and make private variables start with an underscore.
