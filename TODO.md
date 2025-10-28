@@ -2,13 +2,15 @@
 
 ## Current Working Files
 
-- N/A
+- `C:\Users\Sam\Desktop\Strata-Game-Project\signal_bus.gd`
+- `C:\Users\Sam\Desktop\Strata-Game-Project\src\entities\player.gd`
+- `C:\Users\Sam\Desktop\Strata-Game-Project\src\world\chunk_manager.gd`
 
 ## Next Tasks
 
-- Optimize chunk loading and unloading to use regions > chunks > cells. Do generation region by region, and generate a region of chunks at a time. This will let the worker thread actually have something to do and should optimize performance when moving quickly through the world. Use the `global_settings.gd` constants for the settings. Also in the `chunk_manager.gd`, update the generation so that only the new terrain gen is done in a seperate thread, and the rest is done in the main thread. Remove the object pooling and reuse - a chunk should be deleted when it's out of range and a new chunk created when needed. Also optimze for movement in the world (chunks shouldn't be generated twice if the player moves back and forth quickly, and chunks should be removed from the generation queue if the player moves away from them before they are generated).
+- Update the chunk manager to use region checks (when the player changes regions) and hard flush the queues. Only add chunks that don't exist to the queues. Add the optimizations I have annotated in the code comments (thread alive check & a removal queue that processes a set number of chunks per frame or similar. NO pooling for now, just free them).
 
-- Check my code and make private variables start with an underscore.
+- Check my code and make private variables start with an underscore: "In essence, a "private variable" in Godot's GDScript is a variable that, by convention, is marked with an underscore to signify that it is for internal use within its defining class and should not be directly interacted with from external code, even though it is technically accessible."
 
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
 

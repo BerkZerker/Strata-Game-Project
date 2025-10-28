@@ -1,18 +1,18 @@
 class_name TerrainGenerator extends RefCounted
 
-var world_seed: int
-var noise: FastNoiseLite
+var _world_seed: int
+var _noise: FastNoiseLite
 
 
 # Constructor
 func _init(generation_seed: int) -> void:
-	world_seed = generation_seed
-	noise = FastNoiseLite.new()
+	_world_seed = generation_seed
+	_noise = FastNoiseLite.new()
 
 	# Configure the noise generator - I may move this later
-	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	noise.seed = world_seed
-	noise.frequency = 0.003
+	_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	_noise.seed = _world_seed
+	_noise.frequency = 0.003
 
 
 # Generates a chunk of terrain data based on the chunk position in chunk coordinates (not tile coordinates)
@@ -24,7 +24,7 @@ func generate_chunk(chunk_pos: Vector2i) -> Array:
 		chunk.append([])
 		for j in range(GlobalSettings.CHUNK_SIZE):
 			# Get the noise value for this position (i & j are reversed, don't ask why, nobody knows)
-			var value = noise.get_noise_2d(float(chunk_pos.x * GlobalSettings.CHUNK_SIZE + j), float(chunk_pos.y * GlobalSettings.CHUNK_SIZE + i))
+			var value = _noise.get_noise_2d(float(chunk_pos.x * GlobalSettings.CHUNK_SIZE + j), float(chunk_pos.y * GlobalSettings.CHUNK_SIZE + i))
 
 			# Santize the value to be an int - solid is 1 air is 0
 			if value > 0.3:

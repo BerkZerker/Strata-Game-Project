@@ -6,3 +6,11 @@ extends Node
 # `player.set_chunk_manager_reference(chunk_manager)` rather than doing
 # something signal based. This should help with clarity especially when 
 # editing terrain and the like.
+
+@onready var _player: Player = $Player
+@onready var _chunk_manager: ChunkManager = $ChunkManager
+
+
+func _ready() -> void:
+	# Set player reference in chunk manager
+	_chunk_manager.player_instance = _player

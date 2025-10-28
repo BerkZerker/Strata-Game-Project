@@ -8,16 +8,18 @@ class_name Player extends CharacterBody2D
 @export var MINIMUM_ZOOM: Vector2 = Vector2(0.001, 0.001)
 @export var MAXIMUM_ZOOM: Vector2 = Vector2(100, 100)
 
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var camera: Camera2D = $Camera2D
-@onready var coyote_timer: Timer = $CoyoteTimer
+@onready var _sprite: Sprite2D = $Sprite2D
+@onready var _camera: Camera2D = $Camera2D
+@onready var _coyote_timer: Timer = $CoyoteTimer
 
-var was_on_floor: bool = false
-var current_chunk: Vector2i = Vector2i.ZERO
+var _was_on_floor: bool = false
+var _current_chunk: Vector2i = Vector2i.ZERO
+var _current_region: Vector2i = Vector2i.ZERO
 
 func _ready() -> void:
-	coyote_timer.wait_time = COYOTE_TIME
-	#current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)) # Calculate initial chunk position
+	_coyote_timer.wait_time = COYOTE_TIME
+	#_current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)) # Calculate initial chunk position
+	#_current_region = Vector2i(floor(_current_chunk.x / GlobalSettings.REGION_SIZE), floor(_current_chunk.y / GlobalSettings.REGION_SIZE))
 
 
 func _physics_process(delta: float) -> void:
@@ -25,12 +27,12 @@ func _physics_process(delta: float) -> void:
 	# if not is_on_floor():
 	# 	velocity += get_gravity() * delta
 	# 	# Start coyote timer when walking off a ledge
-	# 	if was_on_floor and coyote_timer.is_stopped():
-	# 		coyote_timer.start()
+	# 	if _was_on_floor and _coyote_timer.is_stopped():
+	# 		_coyote_timer.start()
 	# else:
 	# 	# Reset coyote timer when on floor
-	# 	coyote_timer.stop()
-	# was_on_floor = is_on_floor() # Update floor state
+	# 	_coyote_timer.stop()
+	# _was_on_floor = is_on_floor() # Update floor state
 	# # Handle stepping up slopes
 	# handle_step_up()
 	# # Move the player.
@@ -38,9 +40,15 @@ func _physics_process(delta: float) -> void:
 	position.x += velocity.x * delta
 	position.y += velocity.y * delta
 
-	if current_chunk != Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)):
-		current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE))
-		SignalBus.emit_signal("player_chunk_changed", current_chunk)
+	# var new_chunk_pos = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE))
+	# if _current_chunk != new_chunk_pos:
+	# 	_current_chunk = new_chunk_pos
+	# 	SignalBus.emit_signal("player_chunk_changed", _current_chunk)
+
+	# 	var new_region_pos = Vector2i(floor(_current_chunk.x / float(GlobalSettings.REGION_SIZE)), floor(_current_chunk.y / float(GlobalSettings.REGION_SIZE)))
+	# 	if _current_region != new_region_pos:
+	# 		_current_region = new_region_pos
+	# 		SignalBus.emit_signal("player_region_changed", _current_region)
 	
 	# Just write my own collision logic since this is such a specialized geometry
 	# I can reuse much of what I already have, such as coyote jump, and the wall step but 
@@ -77,18 +85,18 @@ func _input(event: InputEvent) -> void:
 	# Handle zoom
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			camera.zoom.x *= 1 + ZOOM_AMOUNT
-			camera.zoom.y *= 1 + ZOOM_AMOUNT
+			_camera.zoom.x *= 1 + ZOOM_AMOUNT
+			_camera.zoom.y *= 1 + ZOOM_AMOUNT
 			# Make sure the camera zoom doesn't zoom too far
-			if camera.zoom > MAXIMUM_ZOOM:
-				camera.zoom = MAXIMUM_ZOOM
+			if _camera.zoom > MAXIMUM_ZOOM:
+				_camera.zoom = MAXIMUM_ZOOM
 
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			camera.zoom.x *= 1 - ZOOM_AMOUNT
-			camera.zoom.y *= 1 - ZOOM_AMOUNT
+			_camera.zoom.x *= 1 - ZOOM_AMOUNT
+			_camera.zoom.y *= 1 - ZOOM_AMOUNT
 			# Make sure the zoom isn't 0
-			if camera.zoom < MINIMUM_ZOOM:
-				camera.zoom = MINIMUM_ZOOM
+			if _camera.zoom < MINIMUM_ZOOM:
+				_camera.zoom = MINIMUM_ZOOM
 
 	# Handle jump
 	# if Input.is_action_just_pressed("jump"): # and (is_on_floor() or not coyote_timer.is_stopped()):
@@ -109,3 +117,14 @@ func _input(event: InputEvent) -> void:
 		velocity.y = SPEED
 	else:
 		velocity.y = move_toward(velocity.y, 0, SPEED)
+
+	# Try moving this here?
+	# var new_chunk_pos = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE))
+	# if _current_chunk != new_chunk_pos:
+	# 	_current_chunk = new_chunk_pos
+	# 	SignalBus.emit_signal("player_chunk_changed", _current_chunk)
+
+	# 	var new_region_pos = Vector2i(floor(_current_chunk.x / float(GlobalSettings.REGION_SIZE)), floor(_current_chunk.y / float(GlobalSettings.REGION_SIZE)))
+	# 	if _current_region != new_region_pos:
+	# 		_current_region = new_region_pos
+	# 		SignalBus.emit_signal("player_region_changed", _current_region)

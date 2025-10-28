@@ -2,11 +2,11 @@ class_name Chunk extends Node2D
 
 @onready var _visual_mesh: MeshInstance2D = $MeshInstance2D
 
-var terrain_data: Array = []
+var _terrain_data: Array = []
 
 
 func generate(chunk_data: Array, chunk_pos: Vector2i) -> void:
-	terrain_data = chunk_data # Just a reference, not a copy. More memory efficient
+	_terrain_data = chunk_data # Just a reference, not a copy. More memory efficient
 	position = Vector2(chunk_pos.x * GlobalSettings.CHUNK_SIZE, chunk_pos.y * GlobalSettings.CHUNK_SIZE)
 
 
@@ -33,8 +33,8 @@ func setup_visual_mesh():
 	for x in range(GlobalSettings.CHUNK_SIZE):
 		for y in range(GlobalSettings.CHUNK_SIZE):
 			# Encode the terrain data into the color channels
-			var tile_id = float(terrain_data[-y - 1][x][0]) # 0th index is tile id
-			var cell_id = float(terrain_data[-y - 1][x][1]) # 1st index is the cell the tile belongs to
+			var tile_id = float(_terrain_data[-y - 1][x][0]) # 0th index is tile id
+			var cell_id = float(_terrain_data[-y - 1][x][1]) # 1st index is the cell the tile belongs to
 			# Encodes the values into the color channels
 			var pixel_data = Color(tile_id / 255.0, cell_id / 255.0, 0, 0)
 			image.set_pixel(x, y, pixel_data)
