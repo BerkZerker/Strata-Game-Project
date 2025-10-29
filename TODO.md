@@ -2,6 +2,12 @@
 
 ## Next Tasks
 
+- Have the generation boarder a region smaller than the removal boarder so that chunks aren't being removed right after being generated.
+
+- Fix the generation thread to use a queue so I can stop it if the thread dies.
+
+- Visualize the chunk boundaries and queues for debugging purposes.
+
 - Sort the generation queue to build from the player's position first and go outwards. Also add different settings to my `global_settings.gd` file to controll the max chunks built and the max chunks removed per frame. This will help with performance when moving fast (I really really hope.)
 
 - Update the chunk manager to use region checks (when the player changes regions) and hard flush the queues. Only add chunks that don't exist to the queues. Add the optimizations I have annotated in the code comments (thread alive check & a removal queue that processes a set number of chunks per frame or similar. NO pooling for now, just free them). Basically cut all the optimizations and do it bare bones but multi-threaded and functional first. I can add pooling and queue optimizations later.

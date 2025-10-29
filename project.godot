@@ -23,7 +23,6 @@ GlobalSettings="*res://global_settings.gd"
 
 window/size/viewport_width=960
 window/size/viewport_height=540
-window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 
 [input]
