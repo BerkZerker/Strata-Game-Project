@@ -7,12 +7,14 @@ class_name ChunkManager extends Node2D
 
 var _generation_queue: Array[Vector2i] = [] # Both threads
 var _build_queue: Array[Dictionary] = [] # Both threads, holds [{pos, terrain_data}]
+var _removal_queue: Array[Chunk] = [] # Main thread only
 var _terrain_generator: TerrainGenerator
 var _thread: Thread
 var _mutex: Mutex
 var _semaphore: Semaphore
 var _thread_alive: bool = true
 var _player_region: Vector2i
+var _player_chunk: Vector2i
 
 var player_instance: Player = null
 var chunks: Dictionary[Vector2i, Chunk] = {} # Main thread only
@@ -30,17 +32,21 @@ func _ready() -> void:
 	_thread.start(_process_chunk_updates)
 
 	# Connect to player region changed signal
-	SignalBus.player_region_changed.connect(_on_player_region_changed)
+	#SignalBus.player_region_changed.connect(_on_player_region_changed)
 
 func _process(_delta: float) -> void:
 	# Check if the player's position changed
 	if player_instance != null:
-		var new_player_region = Vector2i(floor(player_instance.global_position.x / (GlobalSettings.CHUNK_SIZE * GlobalSettings.REGION_SIZE)),
-										 floor(player_instance.global_position.y / (GlobalSettings.CHUNK_SIZE * GlobalSettings.REGION_SIZE)))
-		#if new_player_region != _player_region:
-		_player_region = new_player_region
-		_on_player_region_changed(_player_region)
-
+		var new_player_chunk = Vector2i(floor(player_instance.global_position.x / GlobalSettings.CHUNK_SIZE),
+										floor(player_instance.global_position.y / GlobalSettings.CHUNK_SIZE))
+		var new_player_region = Vector2i(floor(new_player_chunk.x / GlobalSettings.REGION_SIZE),
+										floor(new_player_chunk.y / GlobalSettings.REGION_SIZE))
+		if new_player_chunk != _player_chunk:
+			_player_chunk = new_player_chunk
+			_player_region = new_player_region
+			# I'll clean this up later but currently I still run a check every time the chunk is changed
+			# but only generate the the chunks in regions.
+			_on_player_region_changed(_player_region)
 
 	# Process a limited number of chunks from the build queue each frame
 	var builds_this_frame = 0
@@ -64,6 +70,13 @@ func _process(_delta: float) -> void:
 			chunks[chunk_pos] = chunk
 
 		builds_this_frame += 1
+	
+	# Process a limited number of chunk removals each frame
+	var removals_this_frame = 0
+	while removals_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME and _removal_queue.size() > 0:
+		var chunk = _removal_queue.pop_back()
+		chunk.queue_free()
+		removals_this_frame += 0
 		
 
 func _process_chunk_updates() -> void:
@@ -122,21 +135,29 @@ func _on_player_region_changed(new_player_pos: Vector2i) -> void:
 	
 	# First, unload chunks that are too far away
 	for chunk_pos in chunks.keys(): # Use keys() to avoid dictionary modification issues
+		# Remove chunks in regions.
 		var region_pos = Vector2i(floor(chunk_pos.x / GlobalSettings.REGION_SIZE), floor(chunk_pos.y / GlobalSettings.REGION_SIZE))
 		if region_pos.x < min_x or region_pos.x > max_x or region_pos.y < min_y or region_pos.y > max_y:
 			var chunk = chunks[chunk_pos]
 			chunks.erase(chunk_pos)
-			chunk.queue_free()
+			# Double check?
+			if not _removal_queue.has(chunk):
+				_removal_queue.append(chunk)
 			# This is not optimized :( causes lag spikes when moving fast
 
-	var regions_to_generate: Array[Vector2i] = []
 	# Generate new regions within radius
+	# First flush the generation queue
+	_mutex.lock()
+	_generation_queue.clear()
+	_mutex.unlock()
+	# Now add new regions to the generation queue
+	var regions_to_generate: Array[Vector2i] = []
 	for x in range(min_x, max_x + 1):
 		for y in range(min_y, max_y + 1):
 			var pos = Vector2i(x, y)
 
-			# Check if region isn't already queued for generation.
-			if not _generation_queue.has(pos):
+			# Check if region isn't already queued for generation and doesn't already exist
+			if not _generation_queue.has(pos) and not chunks.has(pos):
 				regions_to_generate.append(pos)
 	
 	# Lock and update the generation queue
