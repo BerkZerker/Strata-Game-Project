@@ -127,17 +127,21 @@ func _exit_tree():
 
 
 func _on_player_region_changed(new_player_pos: Vector2i) -> void:
-	# Calculate the bounds of regions that should be loaded
-	var min_x = new_player_pos.x - GlobalSettings.LOAD_RADIUS
-	var max_x = new_player_pos.x + GlobalSettings.LOAD_RADIUS
-	var min_y = new_player_pos.y - GlobalSettings.LOAD_RADIUS
-	var max_y = new_player_pos.y + GlobalSettings.LOAD_RADIUS
+	# Calculate the bounds of regions that should be generated
+	var gen_min_x = new_player_pos.x - GlobalSettings.GENERATE_RADIUS
+	var gen_max_x = new_player_pos.x + GlobalSettings.GENERATE_RADIUS
+	var gen_min_y = new_player_pos.y - GlobalSettings.GENERATE_RADIUS
+	var gen_max_y = new_player_pos.y + GlobalSettings.GENERATE_RADIUS
+	var del_max_x = new_player_pos.x + GlobalSettings.REMOVE_RADIUS
+	var del_min_x = new_player_pos.x - GlobalSettings.REMOVE_RADIUS
+	var del_max_y = new_player_pos.y + GlobalSettings.REMOVE_RADIUS
+	var del_min_y = new_player_pos.y - GlobalSettings.REMOVE_RADIUS
 	
 	# First, unload chunks that are too far away
 	for chunk_pos in chunks.keys(): # Use keys() to avoid dictionary modification issues
 		# Remove chunks in regions.
 		var region_pos = Vector2i(floor(chunk_pos.x / GlobalSettings.REGION_SIZE), floor(chunk_pos.y / GlobalSettings.REGION_SIZE))
-		if region_pos.x < min_x or region_pos.x > max_x or region_pos.y < min_y or region_pos.y > max_y:
+		if region_pos.x < del_min_x or region_pos.x > del_max_x or region_pos.y < del_min_y or region_pos.y > del_max_y:
 			var chunk = chunks[chunk_pos]
 			chunks.erase(chunk_pos)
 			# Double check?
@@ -152,8 +156,8 @@ func _on_player_region_changed(new_player_pos: Vector2i) -> void:
 	_mutex.unlock()
 	# Now add new regions to the generation queue
 	var regions_to_generate: Array[Vector2i] = []
-	for x in range(min_x, max_x + 1):
-		for y in range(min_y, max_y + 1):
+	for x in range(gen_min_x, gen_max_x + 1):
+		for y in range(gen_min_y, gen_max_y + 1):
 			var pos = Vector2i(x, y)
 
 			# Check if region isn't already queued for generation and doesn't already exist
