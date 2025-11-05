@@ -127,7 +127,7 @@ func _exit_tree():
 
 
 func _on_player_region_changed(new_player_pos: Vector2i) -> void:
-	# Calculate the bounds of regions that should be generated
+	# Calculate the bounds of regions that should be generated IN REGIONS
 	var gen_min_x = new_player_pos.x - GlobalSettings.LOD_RADIUS
 	var gen_max_x = new_player_pos.x + GlobalSettings.LOD_RADIUS
 	var gen_min_y = new_player_pos.y - GlobalSettings.LOD_RADIUS
@@ -158,10 +158,10 @@ func _on_player_region_changed(new_player_pos: Vector2i) -> void:
 	_generation_queue.clear()
 	_mutex.unlock()
 	# Now add new regions to the generation queue
-	var regions_to_generate: Array[Vector2i] = []
+	var chunks_to_generate: Array[Vector2i] = []
 	for x in range(gen_min_x, gen_max_x + 1):
 		for y in range(gen_min_y, gen_max_y + 1):
-			var pos = Vector2i(x, y)
+			var pos = Vector2i(x * GlobalSettings.REGION_SIZE, y * GlobalSettings.REGION_SIZE)
 
 			# Check if region isn't already queued for generation and doesn't already exist
 			if not _generation_queue.has(pos) and not chunks.has(pos):
