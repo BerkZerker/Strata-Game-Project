@@ -2,6 +2,8 @@
 
 ## Next Tasks
 
+- Make sure I'm correclty converting between tile, chunk, and region coords.
+
 - Have the generation boarder a region smaller than the removal boarder so that chunks aren't being removed right after being generated.
 
 - Fix the generation thread to use a queue so I can stop it if the thread dies.

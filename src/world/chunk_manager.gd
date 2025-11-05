@@ -128,14 +128,17 @@ func _exit_tree():
 
 func _on_player_region_changed(new_player_pos: Vector2i) -> void:
 	# Calculate the bounds of regions that should be generated
-	var gen_min_x = new_player_pos.x - GlobalSettings.GENERATE_RADIUS
-	var gen_max_x = new_player_pos.x + GlobalSettings.GENERATE_RADIUS
-	var gen_min_y = new_player_pos.y - GlobalSettings.GENERATE_RADIUS
-	var gen_max_y = new_player_pos.y + GlobalSettings.GENERATE_RADIUS
-	var del_max_x = new_player_pos.x + GlobalSettings.REMOVE_RADIUS
-	var del_min_x = new_player_pos.x - GlobalSettings.REMOVE_RADIUS
-	var del_max_y = new_player_pos.y + GlobalSettings.REMOVE_RADIUS
-	var del_min_y = new_player_pos.y - GlobalSettings.REMOVE_RADIUS
+	var gen_min_x = new_player_pos.x - GlobalSettings.LOD_RADIUS
+	var gen_max_x = new_player_pos.x + GlobalSettings.LOD_RADIUS
+	var gen_min_y = new_player_pos.y - GlobalSettings.LOD_RADIUS
+	var gen_max_y = new_player_pos.y + GlobalSettings.LOD_RADIUS
+	
+	# Calculate removal bounds by adding the buffer to the LOD radius
+	var removal_radius = GlobalSettings.LOD_RADIUS + GlobalSettings.REMOVAL_BUFFER
+	var del_min_x = new_player_pos.x - removal_radius
+	var del_max_x = new_player_pos.x + removal_radius
+	var del_min_y = new_player_pos.y - removal_radius
+	var del_max_y = new_player_pos.y + removal_radius
 	
 	# First, unload chunks that are too far away
 	for chunk_pos in chunks.keys(): # Use keys() to avoid dictionary modification issues
