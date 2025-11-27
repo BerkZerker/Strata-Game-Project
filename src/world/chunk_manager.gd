@@ -158,7 +158,7 @@ func _on_player_region_changed(new_player_pos: Vector2i) -> void:
 	_generation_queue.clear()
 	_mutex.unlock()
 	# Now add new regions to the generation queue
-	var chunks_to_generate: Array[Vector2i] = []
+	var regions_to_generate: Array[Vector2i] = []
 	for x in range(gen_min_x, gen_max_x + 1):
 		for y in range(gen_min_y, gen_max_y + 1):
 			var pos = Vector2i(x * GlobalSettings.REGION_SIZE, y * GlobalSettings.REGION_SIZE)
