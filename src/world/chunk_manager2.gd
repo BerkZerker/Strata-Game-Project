@@ -38,34 +38,34 @@ func _process(_delta: float) -> void:
 			_on_player_region_changed()
 
 	# Process a limited number of chunks from the build queue each frame
-	var builds_this_frame = 0
-	while builds_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME and _build_queue.size() > 0 and _thread_alive:
-		_mutex.lock()
-		var build_data = _build_queue.pop_back()
-		_mutex.unlock()
-		if build_data == null:
-			break
+	# var builds_this_frame = 0
+	# while builds_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME and _build_queue.size() > 0 and _thread_alive:
+	# 	_mutex.lock()
+	# 	var build_data = _build_queue.pop_back()
+	# 	_mutex.unlock()
+	# 	if build_data == null:
+	# 		break
 
-		# Grab the data
-		var chunk_pos = build_data["pos"]
-		var terrain_data = build_data["terrain_data"]
+	# 	# Grab the data
+	# 	var chunk_pos = build_data["pos"]
+	# 	var terrain_data = build_data["terrain_data"]
 
-		# Only build if the chunk doesn't already exist (it might have been built while waiting in the queue)
-		if not chunks.has(chunk_pos):
-			var chunk: Chunk = _CHUNK_SCENE.instantiate()
-			add_child(chunk)
-			chunk.generate(terrain_data, chunk_pos)
-			chunk.build()
-			chunks[chunk_pos] = chunk
+	# 	# Only build if the chunk doesn't already exist (it might have been built while waiting in the queue)
+	# 	if not chunks.has(chunk_pos):
+	# 		var chunk: Chunk = _CHUNK_SCENE.instantiate()
+	# 		add_child(chunk)
+	# 		chunk.generate(terrain_data, chunk_pos)
+	# 		chunk.build()
+	# 		chunks[chunk_pos] = chunk
 
-		builds_this_frame += 1
+	# 	builds_this_frame += 1
 	
-	# Process a limited number of chunk removals each frame
-	var removals_this_frame = 0
-	while removals_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME and _removal_queue.size() > 0:
-		var chunk = _removal_queue.pop_back()
-		chunk.queue_free()
-		removals_this_frame += 0
+	# # Process a limited number of chunk removals each frame
+	# var removals_this_frame = 0
+	# while removals_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME and _removal_queue.size() > 0:
+	# 	var chunk = _removal_queue.pop_back()
+	# 	chunk.queue_free()
+	# 	removals_this_frame += 0
 		
 
 func _process_chunk_updates() -> void:
