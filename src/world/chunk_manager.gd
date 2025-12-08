@@ -1,175 +1,324 @@
 class_name ChunkManager extends Node2D
 
-# Variables
-@export var WORLD_SEED: int = randi() % 1000000 # Random seed for the world generation
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+@export var WORLD_SEED: int = randi() % 1000000
 
 @onready var _CHUNK_SCENE: PackedScene = preload("uid://dbbq2vtjx0w0y")
 
-var _generation_queue: Array[Vector2i] = [] # Both threads
-var _build_queue: Array[Dictionary] = [] # Both threads, holds [{pos, terrain_data}]
-var _removal_queue: Array[Chunk] = [] # Main thread only
+# =============================================================================
+# THREAD-SAFE STATE (protected by _mutex)
+# =============================================================================
+var _generation_queue: Array[Vector2i] = [] # Chunk positions waiting to be generated (sorted by priority)
+var _build_queue: Array[Dictionary] = [] # [{pos: Vector2i, terrain_data: Array}] ready to build
+var _chunks_in_progress: Dictionary = {} # Chunk positions currently being generated (prevents duplicates)
+var _player_chunk_for_priority: Vector2i # Cached player chunk for priority sorting in worker thread
+var _thread_alive: bool = true
+
+# =============================================================================
+# MAIN THREAD ONLY STATE
+# =============================================================================
+var _removal_queue: Array[Chunk] = []
+var _player_region: Vector2i
+var _player_chunk: Vector2i
+var chunks: Dictionary[Vector2i, Chunk] = {}
+var player_instance: Player = null
+
+# =============================================================================
+# THREADING PRIMITIVES
+# =============================================================================
 var _terrain_generator: TerrainGenerator
 var _thread: Thread
 var _mutex: Mutex
 var _semaphore: Semaphore
-var _thread_alive: bool = true
-var _player_region: Vector2i
-var _player_chunk: Vector2i
-
-var player_instance: Player = null
-var chunks: Dictionary[Vector2i, Chunk] = {} # Main thread only
 
 
-# Setup the chunk manager
 func _ready() -> void:
-	# Make a new terrain generator with the given seed
 	_terrain_generator = TerrainGenerator.new(WORLD_SEED)
-
-	# Set up the thread stuff
+	
 	_mutex = Mutex.new()
 	_semaphore = Semaphore.new()
 	_thread = Thread.new()
-	_thread.start(_process_chunk_updates)
+	_thread.start(_worker_thread_loop)
 
-	# Connect to player region changed signal
-	#SignalBus.player_region_changed.connect(_on_player_region_changed)
 
 func _process(_delta: float) -> void:
-	# Check if the player's position changed
-	if player_instance != null:
-		var new_player_chunk = Vector2i(floor(player_instance.global_position.x / GlobalSettings.CHUNK_SIZE),
-										floor(player_instance.global_position.y / GlobalSettings.CHUNK_SIZE))
-		var new_player_region = Vector2i(floor(new_player_chunk.x / GlobalSettings.REGION_SIZE),
-										floor(new_player_chunk.y / GlobalSettings.REGION_SIZE))
-		if new_player_chunk != _player_chunk:
-			_player_chunk = new_player_chunk
-			_player_region = new_player_region
-			# I'll clean this up later but currently I still run a check every time the chunk is changed
-			# but only generate the the chunks in regions.
-			_on_player_region_changed(_player_region)
-
-	# Process a limited number of chunks from the build queue each frame
-	var builds_this_frame = 0
-	while builds_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME and _build_queue.size() > 0 and _thread_alive:
-		_mutex.lock()
-		var build_data = _build_queue.pop_back()
-		_mutex.unlock()
-		if build_data == null:
-			break
-
-		# Grab the data
-		var chunk_pos = build_data["pos"]
-		var terrain_data = build_data["terrain_data"]
-
-		# Only build if the chunk doesn't already exist (it might have been built while waiting in the queue)
-		if not chunks.has(chunk_pos):
-			var chunk: Chunk = _CHUNK_SCENE.instantiate()
-			add_child(chunk)
-			chunk.generate(terrain_data, chunk_pos)
-			chunk.build()
-			chunks[chunk_pos] = chunk
-
-		builds_this_frame += 1
+	if player_instance == null:
+		return
 	
-	# Process a limited number of chunk removals each frame
-	var removals_this_frame = 0
-	while removals_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME and _removal_queue.size() > 0:
-		var chunk = _removal_queue.pop_back()
-		chunk.queue_free()
-		removals_this_frame += 0
+	# Calculate current player chunk and region
+	var new_player_chunk = Vector2i(
+		floori(player_instance.global_position.x / GlobalSettings.CHUNK_SIZE),
+		floori(player_instance.global_position.y / GlobalSettings.CHUNK_SIZE)
+	)
+	var new_player_region = Vector2i(
+		floori(float(new_player_chunk.x) / GlobalSettings.REGION_SIZE),
+		floori(float(new_player_chunk.y) / GlobalSettings.REGION_SIZE)
+	)
+	
+	# Check if player moved to a new chunk
+	if new_player_chunk != _player_chunk:
+		_player_chunk = new_player_chunk
 		
+		# Update priority reference for worker thread
+		_mutex.lock()
+		_player_chunk_for_priority = _player_chunk
+		_mutex.unlock()
+		
+		# Check if player moved to a new region
+		if new_player_region != _player_region:
+			_player_region = new_player_region
+			_on_player_region_changed(_player_region)
+		else:
+			# Even if region didn't change, re-sort the queue for better priority
+			_resort_generation_queue()
+	
+	# Process chunks from build queue (main thread work)
+	_process_build_queue()
+	
+	# Process chunk removals
+	_process_removal_queue()
 
-func _process_chunk_updates() -> void:
-	while _thread_alive:
-		# Wait for work to do
+
+# =============================================================================
+# MAIN THREAD: Queue Processing
+# =============================================================================
+
+func _process_build_queue() -> void:
+	var builds_this_frame = 0
+	
+	while builds_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME:
+		# Get next chunk to build
+		_mutex.lock()
+		if _build_queue.is_empty():
+			_mutex.unlock()
+			break
+		var build_data = _build_queue.pop_front() # FIFO - worker adds in priority order
+		_mutex.unlock()
+		
+		var chunk_pos: Vector2i = build_data["pos"]
+		var terrain_data: Array = build_data["terrain_data"]
+		
+		# Skip if chunk already exists (might have been built while in queue)
+		if chunks.has(chunk_pos):
+			# Still need to remove from in-progress tracking
+			_mutex.lock()
+			_chunks_in_progress.erase(chunk_pos)
+			_mutex.unlock()
+			continue
+		
+		# Instantiate and build the chunk
+		var chunk: Chunk = _CHUNK_SCENE.instantiate()
+		add_child(chunk)
+		chunk.generate(terrain_data, chunk_pos)
+		chunk.build()
+		chunks[chunk_pos] = chunk
+		
+		# Remove from in-progress tracking
+		_mutex.lock()
+		_chunks_in_progress.erase(chunk_pos)
+		_mutex.unlock()
+		
+		builds_this_frame += 1
+
+
+func _process_removal_queue() -> void:
+	var removals_this_frame = 0
+	
+	while removals_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME:
+		if _removal_queue.is_empty():
+			break
+		var chunk = _removal_queue.pop_back()
+		if is_instance_valid(chunk):
+			chunk.queue_free()
+		removals_this_frame += 1
+
+
+# =============================================================================
+# WORKER THREAD: Terrain Generation
+# =============================================================================
+
+func _worker_thread_loop() -> void:
+	while true:
+		# Wait for work signal
 		_semaphore.wait()
-
-		var regions_to_generate = []
-
-		# Lock and copy the queues
+		
+		# Check if we should exit
 		_mutex.lock()
-		regions_to_generate = _generation_queue.duplicate()
-		_generation_queue.clear()
+		if not _thread_alive:
+			_mutex.unlock()
+			break
 		_mutex.unlock()
-
-		# Process chunk generation
-		# I can split this up into a check every x chunks if the thread is alive.
-		# Generate a list of chunk positions to build and then use a while loop to 
-		# work through the queue.
-		var chunks_to_build: Array[Dictionary] = []
-		for region_pos in regions_to_generate:
-			var region_x = region_pos.x * GlobalSettings.REGION_SIZE
-			var region_y = region_pos.y * GlobalSettings.REGION_SIZE
-			for x in range(region_x, region_x + GlobalSettings.REGION_SIZE):
-				for y in range(region_y, region_y + GlobalSettings.REGION_SIZE):
-					var chunk_pos = Vector2i(x, y)
-					if not chunks.has(chunk_pos) and _thread_alive:
-						# Generate the data and collision shapes
-						var terrain_data = _terrain_generator.generate_chunk(chunk_pos)
-						# Add to build queue
-						chunks_to_build.append({"pos": chunk_pos, "terrain_data": terrain_data})
-
-		# Lock and add to the build queue
-		_mutex.lock()
-		_build_queue += chunks_to_build
-		_mutex.unlock()
+		
+		# Process one chunk at a time for responsiveness
+		_process_one_chunk()
 
 
-# Gracefully stop the thread when the node is removed from the scene tree
-func _exit_tree():
+func _process_one_chunk() -> void:
+	# Get the next chunk position to generate
 	_mutex.lock()
-	_generation_queue.clear()
-	_build_queue.clear()
-	_thread_alive = false # Tell the thread it can shut down permanently
+	if _generation_queue.is_empty():
+		_mutex.unlock()
+		return
+	
+	var chunk_pos = _generation_queue.pop_front() # Highest priority (closest to player)
+	
+	# Skip if already built or in progress
+	if _chunks_in_progress.has(chunk_pos):
+		_mutex.unlock()
+		# Signal ourselves to process the next one
+		_semaphore.post()
+		return
+	
+	# Mark as in progress
+	_chunks_in_progress[chunk_pos] = true
 	_mutex.unlock()
-	_semaphore.post() # Wake the thread if it's waiting
-	_thread.wait_to_finish()
-
-
-func _on_player_region_changed(new_player_pos: Vector2i) -> void:
-	# Calculate the bounds of regions that should be generated IN REGIONS
-	var gen_min_x = new_player_pos.x - GlobalSettings.LOD_RADIUS
-	var gen_max_x = new_player_pos.x + GlobalSettings.LOD_RADIUS
-	var gen_min_y = new_player_pos.y - GlobalSettings.LOD_RADIUS
-	var gen_max_y = new_player_pos.y + GlobalSettings.LOD_RADIUS
 	
-	# Calculate removal bounds by adding the buffer to the LOD radius
+	# Generate terrain data (thread-safe operation)
+	var terrain_data = _terrain_generator.generate_chunk(chunk_pos)
+	
+	# Add to build queue
+	_mutex.lock()
+	_build_queue.append({"pos": chunk_pos, "terrain_data": terrain_data})
+	
+	# If there's more work, signal ourselves
+	if not _generation_queue.is_empty():
+		_semaphore.post()
+	_mutex.unlock()
+
+
+# =============================================================================
+# REGION MANAGEMENT
+# =============================================================================
+
+func _on_player_region_changed(new_player_region: Vector2i) -> void:
+	# Calculate bounds in REGION coordinates
+	var gen_radius = GlobalSettings.LOD_RADIUS
 	var removal_radius = GlobalSettings.LOD_RADIUS + GlobalSettings.REMOVAL_BUFFER
-	var del_min_x = new_player_pos.x - removal_radius
-	var del_max_x = new_player_pos.x + removal_radius
-	var del_min_y = new_player_pos.y - removal_radius
-	var del_max_y = new_player_pos.y + removal_radius
 	
-	# First, unload chunks that are too far away
-	for chunk_pos in chunks.keys(): # Use keys() to avoid dictionary modification issues
-		# Remove chunks in regions.
-		var region_pos = Vector2i(floor(chunk_pos.x / GlobalSettings.REGION_SIZE), floor(chunk_pos.y / GlobalSettings.REGION_SIZE))
-		if region_pos.x < del_min_x or region_pos.x > del_max_x or region_pos.y < del_min_y or region_pos.y > del_max_y:
+	# --- STEP 1: Mark chunks for removal ---
+	_mark_chunks_for_removal(new_player_region, removal_radius)
+	
+	# --- STEP 2: Queue new chunks for generation ---
+	_queue_chunks_for_generation(new_player_region, gen_radius)
+
+
+func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> void:
+	# Calculate removal bounds in REGION coordinates
+	var min_region = center_region - Vector2i(removal_radius, removal_radius)
+	var max_region = center_region + Vector2i(removal_radius, removal_radius)
+	
+	# Check all loaded chunks
+	for chunk_pos in chunks.keys():
+		# Convert chunk position to region position
+		var chunk_region = Vector2i(
+			floori(float(chunk_pos.x) / GlobalSettings.REGION_SIZE),
+			floori(float(chunk_pos.y) / GlobalSettings.REGION_SIZE)
+		)
+		
+		# If chunk's region is outside removal bounds, queue for removal
+		if chunk_region.x < min_region.x or chunk_region.x > max_region.x or \
+		   chunk_region.y < min_region.y or chunk_region.y > max_region.y:
 			var chunk = chunks[chunk_pos]
 			chunks.erase(chunk_pos)
-			# Double check?
 			if not _removal_queue.has(chunk):
 				_removal_queue.append(chunk)
-			# This is not optimized :( causes lag spikes when moving fast
 
-	# Generate new regions within radius
-	# First flush the generation queue
-	_mutex.lock()
-	_generation_queue.clear()
-	_mutex.unlock()
-	# Now add new regions to the generation queue
-	var regions_to_generate: Array[Vector2i] = []
-	for x in range(gen_min_x, gen_max_x + 1):
-		for y in range(gen_min_y, gen_max_y + 1):
-			var pos = Vector2i(x * GlobalSettings.REGION_SIZE, y * GlobalSettings.REGION_SIZE)
 
-			# Check if region isn't already queued for generation and doesn't already exist
-			if not _generation_queue.has(pos) and not chunks.has(pos):
-				regions_to_generate.append(pos)
+func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> void:
+	# Collect all chunk positions that need to be generated
+	var chunks_to_queue: Array[Vector2i] = []
 	
-	# Lock and update the generation queue
+	# Iterate over all regions in generation radius
+	for region_x in range(center_region.x - gen_radius, center_region.x + gen_radius + 1):
+		for region_y in range(center_region.y - gen_radius, center_region.y + gen_radius + 1):
+			# Calculate chunk bounds for this region
+			var chunk_start_x = region_x * GlobalSettings.REGION_SIZE
+			var chunk_start_y = region_y * GlobalSettings.REGION_SIZE
+			
+			# Iterate over all chunks in this region
+			for cx in range(chunk_start_x, chunk_start_x + GlobalSettings.REGION_SIZE):
+				for cy in range(chunk_start_y, chunk_start_y + GlobalSettings.REGION_SIZE):
+					var chunk_pos = Vector2i(cx, cy)
+					
+					# Skip if already loaded
+					if chunks.has(chunk_pos):
+						continue
+					
+					chunks_to_queue.append(chunk_pos)
+	
+	# Sort by distance to player (closest first)
+	var player_chunk = _player_chunk
+	chunks_to_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		var dist_a = (a - player_chunk).length_squared()
+		var dist_b = (b - player_chunk).length_squared()
+		return dist_a < dist_b
+	)
+	
+	# Update the generation queue (merge with existing, avoiding duplicates)
 	_mutex.lock()
-	_generation_queue = regions_to_generate
+	
+	# Filter out chunks already in queue or in progress
+	var existing_in_queue: Dictionary = {}
+	for pos in _generation_queue:
+		existing_in_queue[pos] = true
+	
+	var new_chunks: Array[Vector2i] = []
+	for pos in chunks_to_queue:
+		if not existing_in_queue.has(pos) and not _chunks_in_progress.has(pos):
+			new_chunks.append(pos)
+	
+	# Prepend new chunks (they're already sorted by priority)
+	# Then re-sort the entire queue to maintain priority order
+	_generation_queue = new_chunks + _generation_queue
+	_player_chunk_for_priority = player_chunk
+	
+	# Sort entire queue by distance
+	_generation_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		var dist_a = (a - _player_chunk_for_priority).length_squared()
+		var dist_b = (b - _player_chunk_for_priority).length_squared()
+		return dist_a < dist_b
+	)
+	
+	var has_work = not _generation_queue.is_empty()
 	_mutex.unlock()
-	# Signal the worker thread that there's work to do
+	
+	# Wake worker thread if there's work
+	if has_work:
+		_semaphore.post()
+
+
+func _resort_generation_queue() -> void:
+	_mutex.lock()
+	if _generation_queue.is_empty():
+		_mutex.unlock()
+		return
+	
+	var player_chunk = _player_chunk
+	_player_chunk_for_priority = player_chunk
+	
+	_generation_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		var dist_a = (a - player_chunk).length_squared()
+		var dist_b = (b - player_chunk).length_squared()
+		return dist_a < dist_b
+	)
+	_mutex.unlock()
+
+
+# =============================================================================
+# CLEANUP
+# =============================================================================
+
+func _exit_tree() -> void:
+	# Signal thread to stop
+	_mutex.lock()
+	_thread_alive = false
+	_generation_queue.clear()
+	_build_queue.clear()
+	_chunks_in_progress.clear()
+	_mutex.unlock()
+	
+	# Wake thread so it can exit
 	_semaphore.post()
+	_thread.wait_to_finish()
