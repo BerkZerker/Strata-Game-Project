@@ -2,13 +2,11 @@
 
 ## Next Tasks
 
-- Make sure I'm correclty converting between tile, chunk, and region coords.
+- Visualize the chunk boundaries and queues for debugging purposes.
 
 - Have the generation boarder a region smaller than the removal boarder so that chunks aren't being removed right after being generated.
 
 - Fix the generation thread to use a queue so I can stop it if the thread dies.
-
-- Visualize the chunk boundaries and queues for debugging purposes.
 
 - Sort the generation queue to build from the player's position first and go outwards. Also add different settings to my `global_settings.gd` file to controll the max chunks built and the max chunks removed per frame. This will help with performance when moving fast (I really really hope.)
 
