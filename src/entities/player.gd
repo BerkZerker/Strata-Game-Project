@@ -8,13 +8,13 @@ class_name Player extends CharacterBody2D
 @export var MINIMUM_ZOOM: Vector2 = Vector2(0.001, 0.001)
 @export var MAXIMUM_ZOOM: Vector2 = Vector2(100, 100)
 
-@onready var _sprite: Sprite2D = $Sprite2D
+# @onready var _sprite: Sprite2D = $Sprite2D
 @onready var _camera: Camera2D = $Camera2D
 @onready var _coyote_timer: Timer = $CoyoteTimer
 
-var _was_on_floor: bool = false
-var _current_chunk: Vector2i = Vector2i.ZERO
-var _current_region: Vector2i = Vector2i.ZERO
+# var _was_on_floor: bool = false
+# var _current_chunk: Vector2i = Vector2i.ZERO
+# var _current_region: Vector2i = Vector2i.ZERO
 
 func _ready() -> void:
 	_coyote_timer.wait_time = COYOTE_TIME
