@@ -2,6 +2,8 @@
 
 ## Next Tasks
 
+- Clean up player and debug overlay connections to chunk manager - maybe use signals instead of direct calls?
+
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
 
 - Make sure all code works with `global_settings.gd` and run some testing and profiling.
