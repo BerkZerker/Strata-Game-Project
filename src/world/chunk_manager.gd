@@ -99,7 +99,7 @@ func _process(_delta: float) -> void:
 func _process_build_queue() -> void:
 	var builds_this_frame = 0
 	
-	while builds_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME:
+	while builds_this_frame < GlobalSettings.MAX_CHUNK_BUILDS_PER_FRAME:
 		# Get next chunk to build
 		_mutex.lock()
 		if _build_queue.is_empty():
@@ -137,7 +137,7 @@ func _process_build_queue() -> void:
 func _process_removal_queue() -> void:
 	var removals_this_frame = 0
 	
-	while removals_this_frame < GlobalSettings.MAX_CHUNK_UPDATES_PER_FRAME:
+	while removals_this_frame < GlobalSettings.MAX_CHUNK_REMOVALS_PER_FRAME:
 		if _removal_queue.is_empty():
 			break
 		var chunk = _removal_queue.pop_back()
@@ -229,8 +229,7 @@ func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> v
 		)
 		
 		# If chunk's region is outside removal bounds, queue for removal
-		if chunk_region.x < min_region.x or chunk_region.x > max_region.x or \
-		   chunk_region.y < min_region.y or chunk_region.y > max_region.y:
+		if chunk_region.x < min_region.x or chunk_region.x > max_region.x or chunk_region.y < min_region.y or chunk_region.y > max_region.y:
 			var chunk = chunks[chunk_pos]
 			chunks.erase(chunk_pos)
 			if not _removal_queue.has(chunk):
