@@ -2,17 +2,13 @@
 
 ## Next Tasks
 
-- Visualize the chunk & region boundaries and queues for debugging purposes.
+- Figure out what I should and shouldn't have in my `.gitignore` file and what some other random files in the codebase are for.
 
-- Have the generation boarder a region smaller than the removal boarder so that chunks aren't being removed right after being generated.
+- Look over `chunk_manager.gd` & `chunk_debug_overlay.gd` and do some overall cleanup.
 
-- Fix the generation thread to use a queue so I can stop it if the thread dies.
+- Look into other optimizations for the world gen and implement.
 
-- Look into other optimizations for the world gen.
-
-- Sort the generation queue to build from the player's position first and go outwards. Also add different settings to my `global_settings.gd` file to controll the max chunks built and the max chunks removed per frame. This will help with performance when moving fast (I really really hope.)
-
-- Update the chunk manager to use region checks (when the player changes regions) and hard flush the queues. Only add chunks that don't exist to the queues. Add the optimizations I have annotated in the code comments (thread alive check & a removal queue that processes a set number of chunks per frame or similar. NO pooling for now, just free them). Basically cut all the optimizations and do it bare bones but multi-threaded and functional first. I can add pooling and queue optimizations later.
+- Make sure all code works with `global_settings.gd` and run some testing and profiling.
 
 - Check my code and make private variables start with an underscore: "In essence, a "private variable" in Godot's GDScript is a variable that, by convention, is marked with an underscore to signify that it is for internal use within its defining class and should not be directly interacted with from external code, even though it is technically accessible."
 
