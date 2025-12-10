@@ -2,17 +2,15 @@
 
 ## Next Tasks
 
-- Figure out what I should and shouldn't have in my `.gitignore` file and what some other random files in the codebase are for.
-
-- Look over `chunk_manager.gd` & `chunk_debug_overlay.gd` and do some overall cleanup.
-
-- Look into other optimizations for the world gen and implement.
+- Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
 
 - Make sure all code works with `global_settings.gd` and run some testing and profiling.
 
 - Check my code and make private variables start with an underscore: "In essence, a "private variable" in Godot's GDScript is a variable that, by convention, is marked with an underscore to signify that it is for internal use within its defining class and should not be directly interacted with from external code, even though it is technically accessible."
 
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
+
+---
 
 - Re-implement basic editing. (This will require adding some editing functions to the chunk_manager class?)
 

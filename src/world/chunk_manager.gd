@@ -11,10 +11,12 @@ class_name ChunkManager extends Node2D
 # THREAD-SAFE STATE (protected by _mutex)
 # =============================================================================
 var _generation_queue: Array[Vector2i] = [] # Chunk positions waiting to be generated (sorted by priority)
+var _generation_queue_set: Dictionary = {} # O(1) lookup for duplicate checking in generation queue
 var _build_queue: Array[Dictionary] = [] # [{pos: Vector2i, terrain_data: Array}] ready to build
 var _chunks_in_progress: Dictionary = {} # Chunk positions currently being generated (prevents duplicates)
 var _player_chunk_for_priority: Vector2i # Cached player chunk for priority sorting in worker thread
 var _thread_alive: bool = true
+var _generation_paused: bool = false # Backpressure flag when build queue is full
 
 # =============================================================================
 # MAIN THREAD ONLY STATE
@@ -22,6 +24,7 @@ var _thread_alive: bool = true
 var _removal_queue: Array[Chunk] = []
 var _player_region: Vector2i
 var _player_chunk: Vector2i
+var _last_sorted_player_chunk: Vector2i # Track last position queues were sorted for
 var chunks: Dictionary[Vector2i, Chunk] = {}
 var player_instance: Player = null
 
@@ -84,8 +87,9 @@ func _process(_delta: float) -> void:
 			# Resort build queue when region changes
 			_resort_build_queue()
 		else:
-			# Even if region didn't change, re-sort the queue for better priority
+			# Even if region didn't change, re-sort queues for better priority
 			_resort_generation_queue()
+			_resort_build_queue()
 	
 	# Process chunks from build queue (main thread work)
 	_process_build_queue()
@@ -99,34 +103,38 @@ func _process(_delta: float) -> void:
 # =============================================================================
 
 func _process_build_queue() -> void:
-	var builds_this_frame = 0
+	# Batch extract items from build queue with a single lock
+	_mutex.lock()
+	var batch_size = mini(_build_queue.size(), GlobalSettings.MAX_CHUNK_BUILDS_PER_FRAME)
+	var build_batch: Array[Dictionary] = []
+	for i in range(batch_size):
+		build_batch.append(_build_queue.pop_front())
 	
-	while builds_this_frame < GlobalSettings.MAX_CHUNK_BUILDS_PER_FRAME:
-		# Get next chunk to build
-		_mutex.lock()
-		if _build_queue.is_empty():
-			_mutex.unlock()
-			break
-		var build_data = _build_queue.pop_front() # Sorted by priority after region change
-		_mutex.unlock()
-		
+	# Check if we should resume generation (backpressure relief)
+	var should_resume = _generation_paused and _build_queue.size() < GlobalSettings.MAX_BUILD_QUEUE_SIZE / 2.0
+	if should_resume:
+		_generation_paused = false
+	_mutex.unlock()
+	
+	# Wake worker thread if backpressure was relieved
+	if should_resume:
+		_semaphore.post()
+	
+	# Process the batch without holding the lock
+	var chunks_to_mark_done: Array[Vector2i] = []
+	
+	for build_data in build_batch:
 		var chunk_pos: Vector2i = build_data["pos"]
 		var terrain_data: Array = build_data["terrain_data"]
 		
 		# Skip if chunk already exists (might have been built while in queue)
 		if chunks.has(chunk_pos):
-			# Still need to remove from in-progress tracking
-			_mutex.lock()
-			_chunks_in_progress.erase(chunk_pos)
-			_mutex.unlock()
+			chunks_to_mark_done.append(chunk_pos)
 			continue
 		
 		# Skip if chunk is out of valid range (player moved away)
 		if not _is_chunk_in_valid_range(chunk_pos):
-			# Remove from in-progress tracking and discard
-			_mutex.lock()
-			_chunks_in_progress.erase(chunk_pos)
-			_mutex.unlock()
+			chunks_to_mark_done.append(chunk_pos)
 			continue
 		
 		# Instantiate and build the chunk
@@ -135,13 +143,14 @@ func _process_build_queue() -> void:
 		chunk.generate(terrain_data, chunk_pos)
 		chunk.build()
 		chunks[chunk_pos] = chunk
-		
-		# Remove from in-progress tracking
+		chunks_to_mark_done.append(chunk_pos)
+	
+	# Batch remove from in-progress tracking with a single lock
+	if not chunks_to_mark_done.is_empty():
 		_mutex.lock()
-		_chunks_in_progress.erase(chunk_pos)
+		for pos in chunks_to_mark_done:
+			_chunks_in_progress.erase(pos)
 		_mutex.unlock()
-		
-		builds_this_frame += 1
 
 
 func _process_removal_queue() -> void:
@@ -160,12 +169,17 @@ func _process_removal_queue() -> void:
 # HELPER FUNCTIONS
 # =============================================================================
 
-func _is_chunk_in_valid_range(chunk_pos: Vector2i) -> bool:
-	# Calculate the chunk's region
-	var chunk_region = Vector2i(
+## Converts a chunk position to its containing region position
+func _get_chunk_region(chunk_pos: Vector2i) -> Vector2i:
+	return Vector2i(
 		floori(float(chunk_pos.x) / GlobalSettings.REGION_SIZE),
 		floori(float(chunk_pos.y) / GlobalSettings.REGION_SIZE)
 	)
+
+
+func _is_chunk_in_valid_range(chunk_pos: Vector2i) -> bool:
+	# Calculate the chunk's region
+	var chunk_region = _get_chunk_region(chunk_pos)
 	
 	# Calculate removal bounds in REGION coordinates
 	var removal_radius = GlobalSettings.LOD_RADIUS + GlobalSettings.REMOVAL_BUFFER
@@ -179,7 +193,7 @@ func _is_chunk_in_valid_range(chunk_pos: Vector2i) -> bool:
 
 func _resort_build_queue() -> void:
 	_mutex.lock()
-	if _build_queue.is_empty():
+	if _build_queue.size() < 2:
 		_mutex.unlock()
 		return
 	
@@ -203,11 +217,16 @@ func _worker_thread_loop() -> void:
 		# Wait for work signal
 		_semaphore.wait()
 		
-		# Check if we should exit
+		# Check if we should exit or pause
 		_mutex.lock()
 		if not _thread_alive:
 			_mutex.unlock()
 			break
+		
+		# Skip processing if backpressure is active
+		if _generation_paused:
+			_mutex.unlock()
+			continue
 		_mutex.unlock()
 		
 		# Process one chunk at a time for responsiveness
@@ -215,36 +234,51 @@ func _worker_thread_loop() -> void:
 
 
 func _process_one_chunk() -> void:
-	# Get the next chunk position to generate
 	_mutex.lock()
+	
+	# Check for empty queue
 	if _generation_queue.is_empty():
 		_mutex.unlock()
 		return
 	
-	var chunk_pos = _generation_queue.pop_front() # Highest priority (closest to player)
+	# Find the first chunk that isn't already in progress
+	var chunk_pos: Vector2i = Vector2i.ZERO
+	var found_valid_chunk = false
 	
-	# Skip if already built or in progress
-	if _chunks_in_progress.has(chunk_pos):
+	while not _generation_queue.is_empty():
+		chunk_pos = _generation_queue.pop_front()
+		_generation_queue_set.erase(chunk_pos) # Keep set in sync
+		
+		if not _chunks_in_progress.has(chunk_pos):
+			found_valid_chunk = true
+			break
+	
+	if not found_valid_chunk:
 		_mutex.unlock()
-		# Signal ourselves to process the next one
-		_semaphore.post()
 		return
 	
 	# Mark as in progress
 	_chunks_in_progress[chunk_pos] = true
+	var has_more_work = not _generation_queue.is_empty()
 	_mutex.unlock()
 	
-	# Generate terrain data (thread-safe operation)
+	# Generate terrain data (thread-safe operation, done outside lock)
 	var terrain_data = _terrain_generator.generate_chunk(chunk_pos)
 	
-	# Add to build queue
+	# Add to build queue and check backpressure
 	_mutex.lock()
 	_build_queue.append({"pos": chunk_pos, "terrain_data": terrain_data})
 	
-	# If there's more work, signal ourselves
-	if not _generation_queue.is_empty():
-		_semaphore.post()
+	# Apply backpressure if build queue is too large
+	if _build_queue.size() >= GlobalSettings.MAX_BUILD_QUEUE_SIZE:
+		_generation_paused = true
+		has_more_work = false # Don't signal for more work
+	
 	_mutex.unlock()
+	
+	# Signal for more work only if there's actually more to do
+	if has_more_work:
+		_semaphore.post()
 
 
 # =============================================================================
@@ -264,21 +298,21 @@ func _on_player_region_changed(new_player_region: Vector2i) -> void:
 
 
 func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> void:
-	# Calculate removal bounds in REGION coordinates
-	var min_region = center_region - Vector2i(removal_radius, removal_radius)
-	var max_region = center_region + Vector2i(removal_radius, removal_radius)
+	# Check all loaded chunks using abs-based bounds check
+	var chunks_to_remove: Array[Vector2i] = []
 	
-	# Check all loaded chunks
 	for chunk_pos in chunks.keys():
-		# Convert chunk position to region position
-		var chunk_region = Vector2i(
-			floori(float(chunk_pos.x) / GlobalSettings.REGION_SIZE),
-			floori(float(chunk_pos.y) / GlobalSettings.REGION_SIZE)
-		)
+		var chunk_region = _get_chunk_region(chunk_pos)
 		
-		# If chunk's region is outside removal bounds, queue for removal
-		if chunk_region.x < min_region.x or chunk_region.x > max_region.x or chunk_region.y < min_region.y or chunk_region.y > max_region.y:
-			var chunk = chunks[chunk_pos]
+		# If chunk's region is outside removal bounds, mark for removal
+		if absi(chunk_region.x - center_region.x) > removal_radius or \
+		   absi(chunk_region.y - center_region.y) > removal_radius:
+			chunks_to_remove.append(chunk_pos)
+	
+	# Remove marked chunks (separate loop to avoid modifying dict while iterating)
+	for chunk_pos in chunks_to_remove:
+		var chunk = chunks.get(chunk_pos)
+		if chunk != null:
 			chunks.erase(chunk_pos)
 			if not _removal_queue.has(chunk):
 				_removal_queue.append(chunk)
@@ -287,6 +321,7 @@ func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> v
 func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> void:
 	# Collect all chunk positions that need to be generated
 	var chunks_to_queue: Array[Vector2i] = []
+	var player_chunk = _player_chunk
 	
 	# Iterate over all regions in generation radius
 	for region_x in range(center_region.x - gen_radius, center_region.x + gen_radius + 1):
@@ -306,41 +341,41 @@ func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> v
 					
 					chunks_to_queue.append(chunk_pos)
 	
-	# Sort by distance to player (closest first)
-	var player_chunk = _player_chunk
-	chunks_to_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
-		var dist_a = (a - player_chunk).length_squared()
-		var dist_b = (b - player_chunk).length_squared()
-		return dist_a < dist_b
-	)
-	
 	# Update the generation queue (merge with existing, avoiding duplicates)
+	# Note: No need to pre-sort chunks_to_queue - we sort the entire queue after merging
 	_mutex.lock()
 	
-	# Filter out chunks already in queue or in progress
-	var existing_in_queue: Dictionary = {}
-	for pos in _generation_queue:
-		existing_in_queue[pos] = true
-	
+	# Use O(1) set lookup instead of iterating the array
 	var new_chunks: Array[Vector2i] = []
 	for pos in chunks_to_queue:
-		if not existing_in_queue.has(pos) and not _chunks_in_progress.has(pos):
+		if not _generation_queue_set.has(pos) and not _chunks_in_progress.has(pos):
 			new_chunks.append(pos)
+			_generation_queue_set[pos] = true
 	
-	# Prepend new chunks (they're already sorted by priority)
-	# Then re-sort the entire queue to maintain priority order
-	_generation_queue = new_chunks + _generation_queue
-	_player_chunk_for_priority = player_chunk
+	# Merge new chunks with existing queue
+	if not new_chunks.is_empty():
+		_generation_queue = new_chunks + _generation_queue
+		_player_chunk_for_priority = player_chunk
+		
+		# Limit queue size to prevent memory issues
+		if _generation_queue.size() > GlobalSettings.MAX_GENERATION_QUEUE_SIZE:
+			# Remove excess chunks from the end (furthest from player)
+			while _generation_queue.size() > GlobalSettings.MAX_GENERATION_QUEUE_SIZE:
+				var removed = _generation_queue.pop_back()
+				_generation_queue_set.erase(removed)
+		
+		# Sort entire queue by distance (only when we added new chunks)
+		_generation_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+			var dist_a = (a - _player_chunk_for_priority).length_squared()
+			var dist_b = (b - _player_chunk_for_priority).length_squared()
+			return dist_a < dist_b
+		)
 	
-	# Sort entire queue by distance
-	_generation_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
-		var dist_a = (a - _player_chunk_for_priority).length_squared()
-		var dist_b = (b - _player_chunk_for_priority).length_squared()
-		return dist_a < dist_b
-	)
-	
-	var has_work = not _generation_queue.is_empty()
+	var has_work = not _generation_queue.is_empty() and not _generation_paused
 	_mutex.unlock()
+	
+	# Update tracking for smart resorting
+	_last_sorted_player_chunk = player_chunk
 	
 	# Wake worker thread if there's work
 	if has_work:
@@ -348,12 +383,17 @@ func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> v
 
 
 func _resort_generation_queue() -> void:
+	# Skip if player hasn't moved significantly since last sort
+	var player_chunk = _player_chunk
+	var distance_moved = (player_chunk - _last_sorted_player_chunk).length_squared()
+	if distance_moved < 4: # Only resort if moved more than ~2 chunks
+		return
+	
 	_mutex.lock()
-	if _generation_queue.is_empty():
+	if _generation_queue.size() < 2:
 		_mutex.unlock()
 		return
 	
-	var player_chunk = _player_chunk
 	_player_chunk_for_priority = player_chunk
 	
 	_generation_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
@@ -362,6 +402,8 @@ func _resort_generation_queue() -> void:
 		return dist_a < dist_b
 	)
 	_mutex.unlock()
+	
+	_last_sorted_player_chunk = player_chunk
 
 
 # =============================================================================
@@ -405,7 +447,9 @@ func _exit_tree() -> void:
 	# Signal thread to stop
 	_mutex.lock()
 	_thread_alive = false
+	_generation_paused = false
 	_generation_queue.clear()
+	_generation_queue_set.clear()
 	_build_queue.clear()
 	_chunks_in_progress.clear()
 	_mutex.unlock()
