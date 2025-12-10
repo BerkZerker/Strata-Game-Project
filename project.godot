@@ -16,8 +16,8 @@ config/features=PackedStringArray("4.5")
 
 [autoload]
 
-SignalBus="*res://signal_bus.gd"
-GlobalSettings="*res://global_settings.gd"
+SignalBus="*res://src/globals/signal_bus.gd"
+GlobalSettings="*res://src/globals/global_settings.gd"
 
 [display]
 
