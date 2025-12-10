@@ -74,7 +74,7 @@ func _get_visible_rect(camera: Camera2D) -> Rect2:
 	return Rect2(camera_pos - half_size, viewport_size / zoom)
 
 
-func _draw_loaded_regions(viewport_rect: Rect2) -> void:
+func _draw_loaded_regions(_viewport_rect: Rect2) -> void:
 	var chunk_size = GlobalSettings.CHUNK_SIZE
 	var region_size_pixels = GlobalSettings.REGION_SIZE * chunk_size
 	

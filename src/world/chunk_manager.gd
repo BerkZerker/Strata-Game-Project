@@ -81,6 +81,8 @@ func _process(_delta: float) -> void:
 		if new_player_region != _player_region:
 			_player_region = new_player_region
 			_on_player_region_changed(_player_region)
+			# Resort build queue when region changes
+			_resort_build_queue()
 		else:
 			# Even if region didn't change, re-sort the queue for better priority
 			_resort_generation_queue()
@@ -105,7 +107,7 @@ func _process_build_queue() -> void:
 		if _build_queue.is_empty():
 			_mutex.unlock()
 			break
-		var build_data = _build_queue.pop_front() # FIFO - worker adds in priority order
+		var build_data = _build_queue.pop_front() # Sorted by priority after region change
 		_mutex.unlock()
 		
 		var chunk_pos: Vector2i = build_data["pos"]
@@ -114,6 +116,14 @@ func _process_build_queue() -> void:
 		# Skip if chunk already exists (might have been built while in queue)
 		if chunks.has(chunk_pos):
 			# Still need to remove from in-progress tracking
+			_mutex.lock()
+			_chunks_in_progress.erase(chunk_pos)
+			_mutex.unlock()
+			continue
+		
+		# Skip if chunk is out of valid range (player moved away)
+		if not _is_chunk_in_valid_range(chunk_pos):
+			# Remove from in-progress tracking and discard
 			_mutex.lock()
 			_chunks_in_progress.erase(chunk_pos)
 			_mutex.unlock()
@@ -144,6 +154,44 @@ func _process_removal_queue() -> void:
 		if is_instance_valid(chunk):
 			chunk.queue_free()
 		removals_this_frame += 1
+
+
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+func _is_chunk_in_valid_range(chunk_pos: Vector2i) -> bool:
+	# Calculate the chunk's region
+	var chunk_region = Vector2i(
+		floori(float(chunk_pos.x) / GlobalSettings.REGION_SIZE),
+		floori(float(chunk_pos.y) / GlobalSettings.REGION_SIZE)
+	)
+	
+	# Calculate removal bounds in REGION coordinates
+	var removal_radius = GlobalSettings.LOD_RADIUS + GlobalSettings.REMOVAL_BUFFER
+	var min_region = _player_region - Vector2i(removal_radius, removal_radius)
+	var max_region = _player_region + Vector2i(removal_radius, removal_radius)
+	
+	# Check if chunk's region is within bounds
+	return chunk_region.x >= min_region.x and chunk_region.x <= max_region.x and \
+	       chunk_region.y >= min_region.y and chunk_region.y <= max_region.y
+
+
+func _resort_build_queue() -> void:
+	_mutex.lock()
+	if _build_queue.is_empty():
+		_mutex.unlock()
+		return
+	
+	var player_chunk = _player_chunk
+	
+	# Sort build queue by distance to current player position
+	_build_queue.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var dist_a = (a["pos"] - player_chunk).length_squared()
+		var dist_b = (b["pos"] - player_chunk).length_squared()
+		return dist_a < dist_b
+	)
+	_mutex.unlock()
 
 
 # =============================================================================
