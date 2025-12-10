@@ -25,6 +25,9 @@ var _player_chunk: Vector2i
 var chunks: Dictionary[Vector2i, Chunk] = {}
 var player_instance: Player = null
 
+# Debug overlay
+var _debug_overlay: ChunkDebugOverlay = null
+
 # =============================================================================
 # THREADING PRIMITIVES
 # =============================================================================
@@ -41,11 +44,19 @@ func _ready() -> void:
 	_semaphore = Semaphore.new()
 	_thread = Thread.new()
 	_thread.start(_worker_thread_loop)
+	
+	# Create debug overlay
+	_debug_overlay = ChunkDebugOverlay.new()
+	_debug_overlay.chunk_manager = self
+	add_child(_debug_overlay)
 
 
 func _process(_delta: float) -> void:
 	if player_instance == null:
 		return
+	
+	# Handle debug input
+	_handle_debug_input()
 	
 	# Calculate current player chunk and region
 	var new_player_chunk = Vector2i(
@@ -304,6 +315,39 @@ func _resort_generation_queue() -> void:
 		return dist_a < dist_b
 	)
 	_mutex.unlock()
+
+
+# =============================================================================
+# DEBUG INPUT HANDLING
+# =============================================================================
+
+func _handle_debug_input() -> void:
+	if _debug_overlay == null:
+		return
+	
+	# F1: Toggle all debug overlays
+	if Input.is_action_just_pressed("debug_toggle_all"):
+		_debug_overlay.toggle_all()
+	
+	# F2: Toggle loaded regions
+	if Input.is_action_just_pressed("debug_toggle_chunk_borders"):
+		_debug_overlay.toggle_loaded_regions()
+	
+	# F3: Toggle chunk outlines
+	if Input.is_action_just_pressed("debug_toggle_region_borders"):
+		_debug_overlay.toggle_chunk_outlines()
+	
+	# F4: Toggle generation queue
+	if Input.is_action_just_pressed("debug_toggle_generation_queue"):
+		_debug_overlay.toggle_generation_queue()
+	
+	# F5: Toggle removal queue
+	if Input.is_action_just_pressed("debug_toggle_removal_queue"):
+		_debug_overlay.toggle_removal_queue()
+	
+	# F6: Toggle queue info
+	if Input.is_action_just_pressed("debug_toggle_queue_info"):
+		_debug_overlay.toggle_queue_info()
 
 
 # =============================================================================

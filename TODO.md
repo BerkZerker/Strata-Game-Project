@@ -2,7 +2,7 @@
 
 ## Next Tasks
 
-- Visualize the chunk boundaries and queues for debugging purposes.
+- Visualize the chunk & region boundaries and queues for debugging purposes.
 
 - Have the generation boarder a region smaller than the removal boarder so that chunks aren't being removed right after being generated.
 
