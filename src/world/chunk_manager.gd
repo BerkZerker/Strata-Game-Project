@@ -378,11 +378,11 @@ func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> v
 		_player_chunk_for_priority = player_chunk
 		
 		# Limit queue size to prevent memory issues
-		if _generation_queue.size() > GlobalSettings.MAX_GENERATION_QUEUE_SIZE:
-			# Remove excess chunks from the end (furthest from player)
-			while _generation_queue.size() > GlobalSettings.MAX_GENERATION_QUEUE_SIZE:
-				var removed = _generation_queue.pop_back()
-				_generation_queue_set.erase(removed)
+		# if _generation_queue.size() > GlobalSettings.MAX_GENERATION_QUEUE_SIZE:
+		# 	# Remove excess chunks from the end (furthest from player)
+		# 	while _generation_queue.size() > GlobalSettings.MAX_GENERATION_QUEUE_SIZE:
+		# 		var removed = _generation_queue.pop_back()
+		# 		_generation_queue_set.erase(removed)
 		
 		# Sort entire queue by distance (only when we added new chunks)
 		_generation_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:

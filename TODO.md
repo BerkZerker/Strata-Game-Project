@@ -2,8 +2,6 @@
 
 ## Next Tasks
 
-- Fix sorting order for generation and removal queues (generation needs to always start at the closest chunk to the player, removal needs to always start at the farthest chunk from the player).
-
 - Clean up old polling code and finish migrating to signal-based chunk management.
 
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings. Clean up chunk_manager.gd, player.gd, and game_init.gd to keep things tidy.
