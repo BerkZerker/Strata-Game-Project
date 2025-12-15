@@ -105,16 +105,6 @@ func _input(event: InputEvent) -> void:
 	# 	velocity.y = JUMP_VELOCITY
 	# 	coyote_timer.stop()
 
-	# --- DEBUGGING --- 
-	if Input.is_action_pressed("jump"):
-		var new_chunk_pos = Vector2i(int(floor(global_position.x / GlobalSettings.CHUNK_SIZE)), int(floor(global_position.y / GlobalSettings.CHUNK_SIZE)))
-		_current_chunk = new_chunk_pos
-		SignalBus.emit_signal("player_chunk_changed", _current_chunk)
-
-		var new_region_pos = Vector2i(int(floor(_current_chunk.x / float(GlobalSettings.REGION_SIZE))), int(floor(_current_chunk.y / float(GlobalSettings.REGION_SIZE))))
-		_current_region = new_region_pos
-		SignalBus.emit_signal("player_region_changed", _current_region)
-
 	# Get the input direction and handle the movement/deceleration.
 	if Input.is_action_pressed("move_left"):
 		velocity.x = - SPEED

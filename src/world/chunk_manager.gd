@@ -17,6 +17,7 @@ var _chunks_in_progress: Dictionary = {} # Chunk positions currently being gener
 var _player_chunk_for_priority: Vector2i # Cached player chunk for priority sorting in worker thread
 var _thread_alive: bool = true
 var _generation_paused: bool = false # Backpressure flag when build queue is full
+var _needs_queue_refill: bool = false # Flag to trigger queue refilling in main thread
 
 # =============================================================================
 # MAIN THREAD ONLY STATE
@@ -94,6 +95,16 @@ func _process(_delta: float) -> void:
 			# Even if region didn't change, re-sort queues for better priority
 			_resort_generation_queue()
 			_resort_build_queue()
+	
+	# Check if worker thread needs queue refill (smart refilling)
+	_mutex.lock()
+	var needs_refill = _needs_queue_refill
+	if needs_refill:
+		_needs_queue_refill = false # Clear flag first to prevent race conditions
+	_mutex.unlock()
+	
+	if needs_refill:
+		_queue_chunks_for_generation(_player_region, GlobalSettings.LOD_RADIUS)
 	
 	# Process chunks from build queue (main thread work)
 	_process_build_queue()
@@ -264,6 +275,11 @@ func _process_one_chunk() -> void:
 	# Mark as in progress
 	_chunks_in_progress[chunk_pos] = true
 	var has_more_work = not _generation_queue.is_empty()
+	
+	# Trigger queue refill if running low (smart refilling)
+	if _generation_queue.size() < GlobalSettings.GENERATION_QUEUE_LOW_THRESHOLD:
+		_needs_queue_refill = true
+	
 	_mutex.unlock()
 	
 	# Generate terrain data (thread-safe operation, done outside lock)
@@ -412,9 +428,7 @@ func _resort_generation_queue() -> void:
 
 ## Handler: update internal state when player chunk changes (driven by SignalBus)
 func _on_player_chunk_changed(new_player_chunk: Vector2i) -> void:
-	print('test')
 	if new_player_chunk == _player_chunk:
-		print("same")
 		return
 
 	_player_chunk = new_player_chunk

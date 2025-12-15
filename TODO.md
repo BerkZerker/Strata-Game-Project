@@ -2,6 +2,10 @@
 
 ## Next Tasks
 
+- Fix sorting order for generation and removal queues (generation needs to always start at the closest chunk to the player, removal needs to always start at the farthest chunk from the player).
+
+- Clean up old polling code and finish migrating to signal-based chunk management.
+
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings. Clean up chunk_manager.gd, player.gd, and game_init.gd to keep things tidy.
 
 - Make sure all code works with `global_settings.gd` and run some testing and profiling.
@@ -9,6 +13,8 @@
 - Check my code and make private variables start with an underscore: "In essence, a "private variable" in Godot's GDScript is a variable that, by convention, is marked with an underscore to signify that it is for internal use within its defining class and should not be directly interacted with from external code, even though it is technically accessible."
 
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
+
+- SO MUCH CLEANUP.
 
 ---
 
