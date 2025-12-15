@@ -53,6 +53,10 @@ func _ready() -> void:
 	_debug_overlay.chunk_manager = self
 	add_child(_debug_overlay)
 
+	# Connect to player movement signals from central SignalBus
+	SignalBus.connect("player_chunk_changed", _on_player_chunk_changed)
+	SignalBus.connect("player_region_changed", _on_player_region_changed)
+
 
 func _process(_delta: float) -> void:
 	if player_instance == null:
@@ -188,7 +192,7 @@ func _is_chunk_in_valid_range(chunk_pos: Vector2i) -> bool:
 	
 	# Check if chunk's region is within bounds
 	return chunk_region.x >= min_region.x and chunk_region.x <= max_region.x and \
-	       chunk_region.y >= min_region.y and chunk_region.y <= max_region.y
+		   chunk_region.y >= min_region.y and chunk_region.y <= max_region.y
 
 
 func _resort_build_queue() -> void:
@@ -404,6 +408,33 @@ func _resort_generation_queue() -> void:
 	_mutex.unlock()
 	
 	_last_sorted_player_chunk = player_chunk
+
+
+## Handler: update internal state when player chunk changes (driven by SignalBus)
+func _on_player_chunk_changed(new_player_chunk: Vector2i) -> void:
+	print('test')
+	if new_player_chunk == _player_chunk:
+		print("same")
+		return
+
+	_player_chunk = new_player_chunk
+
+	# Update priority reference for worker thread
+	_mutex.lock()
+	_player_chunk_for_priority = _player_chunk
+	_mutex.unlock()
+
+	# Determine region and trigger appropriate updates
+	var new_player_region = _get_chunk_region(_player_chunk)
+	if new_player_region != _player_region:
+		_player_region = new_player_region
+		_on_player_region_changed(_player_region)
+		# Resort build queue when region changes
+		_resort_build_queue()
+	else:
+		# Even if region didn't change, re-sort queues for better priority
+		_resort_generation_queue()
+		_resort_build_queue()
 
 
 # =============================================================================

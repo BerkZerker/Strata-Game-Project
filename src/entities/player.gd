@@ -12,14 +12,15 @@ class_name Player extends CharacterBody2D
 @onready var _camera: Camera2D = $Camera2D
 @onready var _coyote_timer: Timer = $CoyoteTimer
 
-# var _was_on_floor: bool = false
-# var _current_chunk: Vector2i = Vector2i.ZERO
-# var _current_region: Vector2i = Vector2i.ZERO
+var _was_on_floor: bool = false
+var _current_chunk: Vector2i = Vector2i.ZERO
+var _current_region: Vector2i = Vector2i.ZERO
 
 func _ready() -> void:
 	_coyote_timer.wait_time = COYOTE_TIME
-	#_current_chunk = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE)) # Calculate initial chunk position
-	#_current_region = Vector2i(floor(_current_chunk.x / GlobalSettings.REGION_SIZE), floor(_current_chunk.y / GlobalSettings.REGION_SIZE))
+	# Calculate initial player chunk/region
+	_current_chunk = Vector2i(int(floor(global_position.x / GlobalSettings.CHUNK_SIZE)), int(floor(global_position.y / GlobalSettings.CHUNK_SIZE)))
+	_current_region = Vector2i(int(floor(_current_chunk.x / float(GlobalSettings.REGION_SIZE))), int(floor(_current_chunk.y / float(GlobalSettings.REGION_SIZE))))
 
 
 func _physics_process(delta: float) -> void:
@@ -40,15 +41,16 @@ func _physics_process(delta: float) -> void:
 	position.x += velocity.x * delta
 	position.y += velocity.y * delta
 
-	# var new_chunk_pos = Vector2i(floor(position.x / GlobalSettings.CHUNK_SIZE), floor(position.y / GlobalSettings.CHUNK_SIZE))
-	# if _current_chunk != new_chunk_pos:
-	# 	_current_chunk = new_chunk_pos
-	# 	SignalBus.emit_signal("player_chunk_changed", _current_chunk)
+	# Emit signals when crossing chunk/region boundaries
+	var new_chunk_pos = Vector2i(int(floor(global_position.x / GlobalSettings.CHUNK_SIZE)), int(floor(global_position.y / GlobalSettings.CHUNK_SIZE)))
+	if _current_chunk != new_chunk_pos:
+		_current_chunk = new_chunk_pos
+		SignalBus.emit_signal("player_chunk_changed", _current_chunk)
 
-	# 	var new_region_pos = Vector2i(floor(_current_chunk.x / float(GlobalSettings.REGION_SIZE)), floor(_current_chunk.y / float(GlobalSettings.REGION_SIZE)))
-	# 	if _current_region != new_region_pos:
-	# 		_current_region = new_region_pos
-	# 		SignalBus.emit_signal("player_region_changed", _current_region)
+		var new_region_pos = Vector2i(int(floor(_current_chunk.x / float(GlobalSettings.REGION_SIZE))), int(floor(_current_chunk.y / float(GlobalSettings.REGION_SIZE))))
+		if _current_region != new_region_pos:
+			_current_region = new_region_pos
+			SignalBus.emit_signal("player_region_changed", _current_region)
 	
 	# Just write my own collision logic since this is such a specialized geometry
 	# I can reuse much of what I already have, such as coyote jump, and the wall step but 
@@ -102,6 +104,16 @@ func _input(event: InputEvent) -> void:
 	# if Input.is_action_just_pressed("jump"): # and (is_on_floor() or not coyote_timer.is_stopped()):
 	# 	velocity.y = JUMP_VELOCITY
 	# 	coyote_timer.stop()
+
+	# --- DEBUGGING --- 
+	if Input.is_action_pressed("jump"):
+		var new_chunk_pos = Vector2i(int(floor(global_position.x / GlobalSettings.CHUNK_SIZE)), int(floor(global_position.y / GlobalSettings.CHUNK_SIZE)))
+		_current_chunk = new_chunk_pos
+		SignalBus.emit_signal("player_chunk_changed", _current_chunk)
+
+		var new_region_pos = Vector2i(int(floor(_current_chunk.x / float(GlobalSettings.REGION_SIZE))), int(floor(_current_chunk.y / float(GlobalSettings.REGION_SIZE))))
+		_current_region = new_region_pos
+		SignalBus.emit_signal("player_region_changed", _current_region)
 
 	# Get the input direction and handle the movement/deceleration.
 	if Input.is_action_pressed("move_left"):
