@@ -1,15 +1,11 @@
 class_name ChunkManager extends Node2D
 
-# =============================================================================
-# CONFIGURATION
-# =============================================================================
+# Variables
 @export var WORLD_SEED: int = randi() % 1000000
 
 @onready var _CHUNK_SCENE: PackedScene = preload("uid://dbbq2vtjx0w0y")
 
-# =============================================================================
-# THREAD-SAFE STATE (protected by _mutex)
-# =============================================================================
+# Thread-safe state (protected by _mutex)
 var _generation_queue: Array[Vector2i] = [] # Chunk positions waiting to be generated (sorted by priority)
 var _generation_queue_set: Dictionary = {} # O(1) lookup for duplicate checking in generation queue
 var _build_queue: Array[Dictionary] = [] # [{pos: Vector2i, terrain_data: Array}] ready to build
@@ -17,30 +13,22 @@ var _chunks_in_progress: Dictionary = {} # Chunk positions currently being gener
 var _player_chunk_for_priority: Vector2i # Cached player chunk for priority sorting in worker thread
 var _thread_alive: bool = true
 var _generation_paused: bool = false # Backpressure flag when build queue is full
-var _needs_queue_refill: bool = false # Flag to trigger queue refilling in main thread
 
-# =============================================================================
-# MAIN THREAD ONLY STATE
-# =============================================================================
+# Main thread state
 var _removal_queue: Array[Chunk] = []
 var _player_region: Vector2i
 var _player_chunk: Vector2i
 var _last_sorted_player_chunk: Vector2i # Track last position queues were sorted for
 var chunks: Dictionary[Vector2i, Chunk] = {}
-var player_instance: Player = null
 
-# Debug overlay
-var _debug_overlay: ChunkDebugOverlay = null
-
-# =============================================================================
-# THREADING PRIMITIVES
-# =============================================================================
+# Thread and synchronization primitives
 var _terrain_generator: TerrainGenerator
 var _thread: Thread
 var _mutex: Mutex
 var _semaphore: Semaphore
 
 
+# Initialization
 func _ready() -> void:
 	_terrain_generator = TerrainGenerator.new(WORLD_SEED)
 	
@@ -48,64 +36,13 @@ func _ready() -> void:
 	_semaphore = Semaphore.new()
 	_thread = Thread.new()
 	_thread.start(_worker_thread_loop)
-	
-	# Create debug overlay
-	_debug_overlay = ChunkDebugOverlay.new()
-	_debug_overlay.chunk_manager = self
-	add_child(_debug_overlay)
 
 	# Connect to player movement signals from central SignalBus
 	SignalBus.connect("player_chunk_changed", _on_player_chunk_changed)
-	SignalBus.connect("player_region_changed", _on_player_region_changed)
 
 
+# The main process loop, handles processing the queues each frame
 func _process(_delta: float) -> void:
-	if player_instance == null:
-		return
-	
-	# Handle debug input
-	_handle_debug_input()
-	
-	# Calculate current player chunk and region
-	var new_player_chunk = Vector2i(
-		floori(player_instance.global_position.x / GlobalSettings.CHUNK_SIZE),
-		floori(player_instance.global_position.y / GlobalSettings.CHUNK_SIZE)
-	)
-	var new_player_region = Vector2i(
-		floori(float(new_player_chunk.x) / GlobalSettings.REGION_SIZE),
-		floori(float(new_player_chunk.y) / GlobalSettings.REGION_SIZE)
-	)
-	
-	# Check if player moved to a new chunk
-	if new_player_chunk != _player_chunk:
-		_player_chunk = new_player_chunk
-		
-		# Update priority reference for worker thread
-		_mutex.lock()
-		_player_chunk_for_priority = _player_chunk
-		_mutex.unlock()
-		
-		# Check if player moved to a new region
-		if new_player_region != _player_region:
-			_player_region = new_player_region
-			_on_player_region_changed(_player_region)
-			# Resort build queue when region changes
-			_resort_build_queue()
-		else:
-			# Even if region didn't change, re-sort queues for better priority
-			_resort_generation_queue()
-			_resort_build_queue()
-	
-	# Check if worker thread needs queue refill (smart refilling)
-	_mutex.lock()
-	var needs_refill = _needs_queue_refill
-	if needs_refill:
-		_needs_queue_refill = false # Clear flag first to prevent race conditions
-	_mutex.unlock()
-	
-	if needs_refill:
-		_queue_chunks_for_generation(_player_region, GlobalSettings.LOD_RADIUS)
-	
 	# Process chunks from build queue (main thread work)
 	_process_build_queue()
 	
@@ -113,10 +50,7 @@ func _process(_delta: float) -> void:
 	_process_removal_queue()
 
 
-# =============================================================================
-# MAIN THREAD: Queue Processing
-# =============================================================================
-
+# Processes chunk builds from the build queue
 func _process_build_queue() -> void:
 	# Batch extract items from build queue with a single lock
 	_mutex.lock()
@@ -168,6 +102,7 @@ func _process_build_queue() -> void:
 		_mutex.unlock()
 
 
+# Processes chunk removals from the removal queue
 func _process_removal_queue() -> void:
 	var removals_this_frame = 0
 	
@@ -180,10 +115,6 @@ func _process_removal_queue() -> void:
 		removals_this_frame += 1
 
 
-# =============================================================================
-# HELPER FUNCTIONS
-# =============================================================================
-
 ## Converts a chunk position to its containing region position
 func _get_chunk_region(chunk_pos: Vector2i) -> Vector2i:
 	return Vector2i(
@@ -192,6 +123,7 @@ func _get_chunk_region(chunk_pos: Vector2i) -> Vector2i:
 	)
 
 
+# Checks if a chunk is within the valid range for loading based on player position
 func _is_chunk_in_valid_range(chunk_pos: Vector2i) -> bool:
 	# Calculate the chunk's region
 	var chunk_region = _get_chunk_region(chunk_pos)
@@ -202,31 +134,10 @@ func _is_chunk_in_valid_range(chunk_pos: Vector2i) -> bool:
 	var max_region = _player_region + Vector2i(removal_radius, removal_radius)
 	
 	# Check if chunk's region is within bounds
-	return chunk_region.x >= min_region.x and chunk_region.x <= max_region.x and \
-		   chunk_region.y >= min_region.y and chunk_region.y <= max_region.y
+	return chunk_region.x >= min_region.x and chunk_region.x <= max_region.x and chunk_region.y >= min_region.y and chunk_region.y <= max_region.y
 
 
-func _resort_build_queue() -> void:
-	_mutex.lock()
-	if _build_queue.size() < 2:
-		_mutex.unlock()
-		return
-	
-	var player_chunk = _player_chunk
-	
-	# Sort build queue by distance to current player position
-	_build_queue.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var dist_a = (a["pos"] - player_chunk).length_squared()
-		var dist_b = (b["pos"] - player_chunk).length_squared()
-		return dist_a < dist_b
-	)
-	_mutex.unlock()
-
-
-# =============================================================================
-# WORKER THREAD: Terrain Generation
-# =============================================================================
-
+# Worker thread loop for chunk generation
 func _worker_thread_loop() -> void:
 	while true:
 		# Wait for work signal
@@ -248,6 +159,7 @@ func _worker_thread_loop() -> void:
 		_process_one_chunk()
 
 
+# Processes a single chunk from the generation queue
 func _process_one_chunk() -> void:
 	_mutex.lock()
 	
@@ -276,10 +188,6 @@ func _process_one_chunk() -> void:
 	_chunks_in_progress[chunk_pos] = true
 	var has_more_work = not _generation_queue.is_empty()
 	
-	# Trigger queue refill if running low (smart refilling)
-	if _generation_queue.size() < GlobalSettings.GENERATION_QUEUE_LOW_THRESHOLD:
-		_needs_queue_refill = true
-	
 	_mutex.unlock()
 	
 	# Generate terrain data (thread-safe operation, done outside lock)
@@ -301,22 +209,7 @@ func _process_one_chunk() -> void:
 		_semaphore.post()
 
 
-# =============================================================================
-# REGION MANAGEMENT
-# =============================================================================
-
-func _on_player_region_changed(new_player_region: Vector2i) -> void:
-	# Calculate bounds in REGION coordinates
-	var gen_radius = GlobalSettings.LOD_RADIUS
-	var removal_radius = GlobalSettings.LOD_RADIUS + GlobalSettings.REMOVAL_BUFFER
-	
-	# --- STEP 1: Mark chunks for removal ---
-	_mark_chunks_for_removal(new_player_region, removal_radius)
-	
-	# --- STEP 2: Queue new chunks for generation ---
-	_queue_chunks_for_generation(new_player_region, gen_radius)
-
-
+# Marks chunks for removal based on player region and removal radius
 func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> void:
 	# Check all loaded chunks using abs-based bounds check
 	var chunks_to_remove: Array[Vector2i] = []
@@ -325,8 +218,7 @@ func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> v
 		var chunk_region = _get_chunk_region(chunk_pos)
 		
 		# If chunk's region is outside removal bounds, mark for removal
-		if absi(chunk_region.x - center_region.x) > removal_radius or \
-		   absi(chunk_region.y - center_region.y) > removal_radius:
+		if absi(chunk_region.x - center_region.x) > removal_radius or absi(chunk_region.y - center_region.y) > removal_radius:
 			chunks_to_remove.append(chunk_pos)
 	
 	# Remove marked chunks (separate loop to avoid modifying dict while iterating)
@@ -338,6 +230,7 @@ func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> v
 				_removal_queue.append(chunk)
 
 
+# Queues new chunks for generation based on player region and generation radius
 func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> void:
 	# Collect all chunk positions that need to be generated
 	var chunks_to_queue: Array[Vector2i] = []
@@ -377,13 +270,6 @@ func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> v
 		_generation_queue = new_chunks + _generation_queue
 		_player_chunk_for_priority = player_chunk
 		
-		# Limit queue size to prevent memory issues
-		# if _generation_queue.size() > GlobalSettings.MAX_GENERATION_QUEUE_SIZE:
-		# 	# Remove excess chunks from the end (furthest from player)
-		# 	while _generation_queue.size() > GlobalSettings.MAX_GENERATION_QUEUE_SIZE:
-		# 		var removed = _generation_queue.pop_back()
-		# 		_generation_queue_set.erase(removed)
-		
 		# Sort entire queue by distance (only when we added new chunks)
 		_generation_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 			var dist_a = (a - _player_chunk_for_priority).length_squared()
@@ -402,6 +288,7 @@ func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> v
 		_semaphore.post()
 
 
+# Resorts the generation queue based on current player position
 func _resort_generation_queue() -> void:
 	# Skip if player hasn't moved significantly since last sort
 	var player_chunk = _player_chunk
@@ -426,11 +313,30 @@ func _resort_generation_queue() -> void:
 	_last_sorted_player_chunk = player_chunk
 
 
-## Handler: update internal state when player chunk changes (driven by SignalBus)
+# Resorts the build queue based on current player position
+func _resort_build_queue() -> void:
+	_mutex.lock()
+	if _build_queue.size() < 2:
+		_mutex.unlock()
+		return
+	
+	var player_chunk = _player_chunk
+	
+	# Sort build queue by distance to current player position
+	_build_queue.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var dist_a = (a["pos"] - player_chunk).length_squared()
+		var dist_b = (b["pos"] - player_chunk).length_squared()
+		return dist_a < dist_b
+	)
+	_mutex.unlock()
+
+
+# Handler: update internal state when player chunk changes (driven by SignalBus)
 func _on_player_chunk_changed(new_player_chunk: Vector2i) -> void:
 	if new_player_chunk == _player_chunk:
 		return
 
+	# Update player chunk and flag update
 	_player_chunk = new_player_chunk
 
 	# Update priority reference for worker thread
@@ -443,51 +349,30 @@ func _on_player_chunk_changed(new_player_chunk: Vector2i) -> void:
 	if new_player_region != _player_region:
 		_player_region = new_player_region
 		_on_player_region_changed(_player_region)
-		# Resort build queue when region changes
-		_resort_build_queue()
 	else:
 		# Even if region didn't change, re-sort queues for better priority
 		_resort_generation_queue()
 		_resort_build_queue()
 
 
-# =============================================================================
-# DEBUG INPUT HANDLING
-# =============================================================================
+# Handler: update chunk loading when player region changes
+func _on_player_region_changed(new_player_region: Vector2i) -> void:
+	# Calculate bounds in REGION coordinates
+	var gen_radius = GlobalSettings.LOD_RADIUS
+	var removal_radius = GlobalSettings.LOD_RADIUS + GlobalSettings.REMOVAL_BUFFER
+	
+	# --- STEP 1: Mark chunks for removal ---
+	_mark_chunks_for_removal(new_player_region, removal_radius)
+	
+	# --- STEP 2: Queue new chunks for generation ---
+	_queue_chunks_for_generation(new_player_region, gen_radius)
 
-func _handle_debug_input() -> void:
-	if _debug_overlay == null:
-		return
-	
-	# F1: Toggle all debug overlays
-	if Input.is_action_just_pressed("debug_toggle_all"):
-		_debug_overlay.toggle_all()
-	
-	# F2: Toggle loaded regions
-	if Input.is_action_just_pressed("debug_toggle_chunk_borders"):
-		_debug_overlay.toggle_loaded_regions()
-	
-	# F3: Toggle chunk outlines
-	if Input.is_action_just_pressed("debug_toggle_region_borders"):
-		_debug_overlay.toggle_chunk_outlines()
-	
-	# F4: Toggle generation queue
-	if Input.is_action_just_pressed("debug_toggle_generation_queue"):
-		_debug_overlay.toggle_generation_queue()
-	
-	# F5: Toggle removal queue
-	if Input.is_action_just_pressed("debug_toggle_removal_queue"):
-		_debug_overlay.toggle_removal_queue()
-	
-	# F6: Toggle queue info
-	if Input.is_action_just_pressed("debug_toggle_queue_info"):
-		_debug_overlay.toggle_queue_info()
+	# Resort queues
+	_resort_generation_queue()
+	_resort_build_queue()
 
 
-# =============================================================================
-# CLEANUP
-# =============================================================================
-
+# Cleanup on exit
 func _exit_tree() -> void:
 	# Signal thread to stop
 	_mutex.lock()

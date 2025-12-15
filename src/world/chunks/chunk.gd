@@ -1,5 +1,6 @@
 class_name Chunk extends Node2D
 
+# Variables
 @onready var _visual_mesh: MeshInstance2D = $MeshInstance2D
 
 var _terrain_data: Array = []

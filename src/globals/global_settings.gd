@@ -7,5 +7,3 @@ const REMOVAL_BUFFER: int = 2 # How many extra regions to add to the LOD_RADIUS 
 const MAX_CHUNK_BUILDS_PER_FRAME: int = 8 # Max number of chunks to build per frame
 const MAX_CHUNK_REMOVALS_PER_FRAME: int = 8 # Max number of chunks to remove per frame
 const MAX_BUILD_QUEUE_SIZE: int = 64 # Max chunks waiting to be built (backpressure threshold)
-const MAX_GENERATION_QUEUE_SIZE: int = 128 # Max chunks waiting to be generated
-const GENERATION_QUEUE_LOW_THRESHOLD: int = 32 # Trigger queue refill when below this (25% of max)
