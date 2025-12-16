@@ -20,6 +20,7 @@ var _player_region: Vector2i
 var _player_chunk: Vector2i
 var _last_sorted_player_chunk: Vector2i # Track last position queues were sorted for
 var chunks: Dictionary[Vector2i, Chunk] = {}
+var _chunk_pool: Array[Chunk] = [] # Pool of reusable chunk instances
 
 # Thread and synchronization primitives
 var _terrain_generator: TerrainGenerator
@@ -75,6 +76,7 @@ func _process_build_queue() -> void:
 	for build_data in build_batch:
 		var chunk_pos: Vector2i = build_data["pos"]
 		var terrain_data: Array = build_data["terrain_data"]
+		var visual_image: Image = build_data["visual_image"]
 		
 		# Skip if chunk already exists (might have been built while in queue)
 		if chunks.has(chunk_pos):
@@ -86,11 +88,13 @@ func _process_build_queue() -> void:
 			chunks_to_mark_done.append(chunk_pos)
 			continue
 		
-		# Instantiate and build the chunk
-		var chunk: Chunk = _CHUNK_SCENE.instantiate()
-		add_child(chunk)
+		# Instantiate and build the chunk (using pool)
+		var chunk: Chunk = _get_chunk()
+		if chunk.get_parent() == null:
+			add_child(chunk)
+		
 		chunk.generate(terrain_data, chunk_pos)
-		chunk.build()
+		chunk.build(visual_image)
 		chunks[chunk_pos] = chunk
 		chunks_to_mark_done.append(chunk_pos)
 	
@@ -111,7 +115,7 @@ func _process_removal_queue() -> void:
 			break
 		var chunk = _removal_queue.pop_back()
 		if is_instance_valid(chunk):
-			chunk.queue_free()
+			_recycle_chunk(chunk)
 		removals_this_frame += 1
 
 
@@ -193,9 +197,16 @@ func _process_one_chunk() -> void:
 	# Generate terrain data (thread-safe operation, done outside lock)
 	var terrain_data = _terrain_generator.generate_chunk(chunk_pos)
 	
+	# Generate visual image data in the thread to save main thread time
+	var visual_image = _generate_visual_image(terrain_data)
+	
 	# Add to build queue and check backpressure
 	_mutex.lock()
-	_build_queue.append({"pos": chunk_pos, "terrain_data": terrain_data})
+	_build_queue.append({
+		"pos": chunk_pos,
+		"terrain_data": terrain_data,
+		"visual_image": visual_image
+	})
 	
 	# Apply backpressure if build queue is too large
 	if _build_queue.size() >= GlobalSettings.MAX_BUILD_QUEUE_SIZE:
@@ -370,6 +381,51 @@ func _on_player_region_changed(new_player_region: Vector2i) -> void:
 	# Resort queues
 	_resort_generation_queue()
 	_resort_build_queue()
+
+
+# Retrieves a chunk from the pool or creates a new one if pool is empty
+func _get_chunk() -> Chunk:
+	if _chunk_pool.is_empty():
+		return _CHUNK_SCENE.instantiate()
+	else:
+		var chunk = _chunk_pool.pop_back()
+		return chunk
+
+
+# Recycles a chunk back into the pool or frees it if pool is full
+func _recycle_chunk(chunk: Chunk) -> void:
+	if is_instance_valid(chunk):
+		chunk.reset()
+		if _chunk_pool.size() < GlobalSettings.MAX_CHUNK_POOL_SIZE:
+			_chunk_pool.append(chunk)
+		else:
+			chunk.queue_free() # Free excess chunks
+
+# Helper to generate the chunk image in the worker thread
+func _generate_visual_image(terrain_data: Array) -> Image:
+	var image = Image.create(GlobalSettings.CHUNK_SIZE, GlobalSettings.CHUNK_SIZE, false, Image.FORMAT_RGBA8)
+	
+	# Pre-calculate factors to avoid division in loop
+	var inv_255 = 1.0 / 255.0
+	
+	for x in range(GlobalSettings.CHUNK_SIZE):
+		for y in range(GlobalSettings.CHUNK_SIZE):
+			# Matches logic in original Chunk.gd: _terrain_data[-y - 1][x]
+			# terrain_data[0] is bottom row? 
+			# Original: _terrain_data[-y - 1][x] where y is 0..31
+			# if y=0 -> -1 (last element)
+			# if y=31 -> -32 (first element)
+			# So we iterate y from 0 to 31, but access array from end backwards.
+			var row_index = -y - 1
+			var tile_info = terrain_data[row_index][x]
+			
+			var tile_id = float(tile_info[0])
+			var cell_id = float(tile_info[1])
+			
+			# Set pixel (x, y)
+			image.set_pixel(x, y, Color(tile_id * inv_255, cell_id * inv_255, 0, 0))
+			
+	return image
 
 
 # Cleanup on exit
