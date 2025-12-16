@@ -2,7 +2,7 @@
 
 ## Current Status
 
-Project is clean and file structure is good & organized. Next steps are to look at chunk pooling and implementing a proper debugging overlay in the game_instance with project-wide keybindings. Keep things tidy and clean up code as I go and then just update all local variables as detailed below, and finally update the README. Then I can move on to terrain editing and generation algorithms.
+Project is clean and file structure is good & organized. Next steps are to look at chunk pooling and hiding out of bounds chunks and implementing a proper debugging overlay in the game_instance with project-wide keybindings. Keep things tidy and clean up code as I go and then just update all local variables as detailed below, and finally update the README. Then I can move on to terrain editing and generation algorithms.
 
 ---
 
