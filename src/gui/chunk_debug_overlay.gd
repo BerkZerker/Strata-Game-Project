@@ -81,7 +81,7 @@ func _draw_loaded_regions(_viewport_rect: Rect2) -> void:
 	# Get all loaded chunks to determine which regions to highlight
 	var loaded_regions: Dictionary = {}
 	
-	for chunk_pos in chunk_manager.chunks.keys():
+	for chunk_pos in chunk_manager._chunks.keys():
 		var region_x = floori(float(chunk_pos.x) / GlobalSettings.REGION_SIZE)
 		var region_y = floori(float(chunk_pos.y) / GlobalSettings.REGION_SIZE)
 		var region_pos = Vector2i(region_x, region_y)
@@ -101,7 +101,7 @@ func _draw_chunk_outlines() -> void:
 	var chunk_size = GlobalSettings.CHUNK_SIZE
 	
 	# Draw white outline for each loaded chunk
-	for chunk_pos in chunk_manager.chunks.keys():
+	for chunk_pos in chunk_manager._chunks.keys():
 		var pos = Vector2(chunk_pos.x * chunk_size, chunk_pos.y * chunk_size)
 		var rect = Rect2(pos, Vector2(chunk_size, chunk_size))
 		draw_rect(rect, COLOR_CHUNK_OUTLINE, false, 1.0)
@@ -160,7 +160,7 @@ func _update_info_label() -> void:
 	chunk_manager._mutex.unlock()
 	
 	var removal_queue_size = chunk_manager._removal_queue.size()
-	var loaded_chunks = chunk_manager.chunks.size()
+	var loaded_chunks = chunk_manager._chunks.size()
 	
 	# Format info text
 	var info_text = "=== CHUNK DEBUG ===\n"

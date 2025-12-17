@@ -3,7 +3,7 @@ class_name ChunkManager extends Node2D
 # Variables
 @export var WORLD_SEED: int = randi() % 1000000
 
-@onready var _CHUNK_SCENE: PackedScene = preload("uid://dbbq2vtjx0w0y")
+@onready var _chunk_scene: PackedScene = preload("uid://dbbq2vtjx0w0y")
 
 # Thread-safe state (protected by _mutex)
 var _generation_queue: Array[Vector2i] = [] # Chunk positions waiting to be generated (sorted by priority)
@@ -19,7 +19,7 @@ var _removal_queue: Array[Chunk] = []
 var _player_region: Vector2i
 var _player_chunk: Vector2i
 var _last_sorted_player_chunk: Vector2i # Track last position queues were sorted for
-var chunks: Dictionary[Vector2i, Chunk] = {}
+var _chunks: Dictionary[Vector2i, Chunk] = {}
 var _chunk_pool: Array[Chunk] = [] # Pool of reusable chunk instances
 
 # Thread and synchronization primitives
@@ -79,7 +79,7 @@ func _process_build_queue() -> void:
 		var visual_image: Image = build_data["visual_image"]
 		
 		# Skip if chunk already exists (might have been built while in queue)
-		if chunks.has(chunk_pos):
+		if _chunks.has(chunk_pos):
 			chunks_to_mark_done.append(chunk_pos)
 			continue
 		
@@ -95,7 +95,7 @@ func _process_build_queue() -> void:
 		
 		chunk.generate(terrain_data, chunk_pos)
 		chunk.build(visual_image)
-		chunks[chunk_pos] = chunk
+		_chunks[chunk_pos] = chunk
 		chunks_to_mark_done.append(chunk_pos)
 	
 	# Batch remove from in-progress tracking with a single lock
@@ -225,7 +225,7 @@ func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> v
 	# Check all loaded chunks using abs-based bounds check
 	var chunks_to_remove: Array[Vector2i] = []
 	
-	for chunk_pos in chunks.keys():
+	for chunk_pos in _chunks.keys():
 		var chunk_region = _get_chunk_region(chunk_pos)
 		
 		# If chunk's region is outside removal bounds, mark for removal
@@ -234,9 +234,9 @@ func _mark_chunks_for_removal(center_region: Vector2i, removal_radius: int) -> v
 	
 	# Remove marked chunks (separate loop to avoid modifying dict while iterating)
 	for chunk_pos in chunks_to_remove:
-		var chunk = chunks.get(chunk_pos)
+		var chunk = _chunks.get(chunk_pos)
 		if chunk != null:
-			chunks.erase(chunk_pos)
+			_chunks.erase(chunk_pos)
 			if not _removal_queue.has(chunk):
 				_removal_queue.append(chunk)
 
@@ -260,7 +260,7 @@ func _queue_chunks_for_generation(center_region: Vector2i, gen_radius: int) -> v
 					var chunk_pos = Vector2i(cx, cy)
 					
 					# Skip if already loaded
-					if chunks.has(chunk_pos):
+					if _chunks.has(chunk_pos):
 						continue
 					
 					chunks_to_queue.append(chunk_pos)
@@ -386,7 +386,7 @@ func _on_player_region_changed(new_player_region: Vector2i) -> void:
 # Retrieves a chunk from the pool or creates a new one if pool is empty
 func _get_chunk() -> Chunk:
 	if _chunk_pool.is_empty():
-		return _CHUNK_SCENE.instantiate()
+		return _chunk_scene.instantiate()
 	else:
 		var chunk = _chunk_pool.pop_back()
 		return chunk

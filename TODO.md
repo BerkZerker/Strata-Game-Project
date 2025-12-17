@@ -1,21 +1,18 @@
 # TODO List
 
-## Current Status
+- Split chunk_manager into multiple files for better organization - perhaps one for the main thread & one for the worker thread?
 
-Project is clean and file structure is good & organized. Next steps are to look at chunk pooling and hiding out of bounds chunks and implementing a proper debugging overlay in the game_instance with project-wide keybindings. Keep things tidy and clean up code as I go and then just update all local variables as detailed below, and finally update the README. Then I can move on to terrain editing and generation algorithms.
+- Add get_tile and set_tile, (possibly the same for chunks & regions) to the chunk_manager for easier access to tiles without needing to get the chunk/region first.
 
----
+- Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
 
-- Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings. Clean up chunk_manager.gd, player.gd, and game_init.gd to keep things tidy.
-
-- Check my code and make private variables start with an underscore: "In essence, a "private variable" in Godot's GDScript is a vaconst MAX_GENERATION_QUEUE_SIZE: int = 128 # Max chunks waiting to be generated
-  const GENERATION_QUEUE_LOW_THRESHOLD: int = 32 # Trigger queue refill when below this (25% of max)riable that, by convention, is marked with an underscore to signify that it is for internal use within its defining class and should not be directly interacted with from external code, even though it is technically accessible."
+- Check my code and make private variables start with an underscore: "In essence, private instance variables should be prefixed with an underscore to indicate that they are intended for internal use only."
 
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
 
-- SO MUCH CLEANUP.
-
 ---
+
+- Re-implement collision detection for the terrain chunks using swept AABB checking directly against the chunk data rather than using Godot's built-in collision shapes. This will allow for much more precise collision detection and will be necessary for proper terrain editing, as well as better performance.
 
 - Re-implement basic editing. (This will require adding some editing functions to the chunk_manager class?)
 
