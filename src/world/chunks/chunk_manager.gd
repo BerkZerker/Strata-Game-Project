@@ -21,6 +21,12 @@ var _chunk_pool: Array[Chunk] = [] # Pool of reusable chunk instances
 func _ready() -> void:
 	# Initialize the threaded loader
 	_chunk_loader = ChunkLoader.new(world_seed)
+
+	# Pre-populate chunk pool to prevent runtime instantiation lag
+	for i in range(GlobalSettings.MAX_CHUNK_POOL_SIZE):
+		var chunk = _chunk_scene.instantiate()
+		chunk.visible = false
+		_chunk_pool.append(chunk)
 	
 	# Connect to player movement signals from central SignalBus
 	SignalBus.connect("player_chunk_changed", _on_player_chunk_changed)

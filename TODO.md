@@ -1,7 +1,5 @@
 # TODO List
 
-- See what else I can move off the main thread into the worker threads to improve performance.
-
 - Add getters and setters for accessing terrain data in a thread-safe way.
 
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
