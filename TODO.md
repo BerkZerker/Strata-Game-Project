@@ -1,12 +1,10 @@
 # TODO List
 
-- Split chunk_manager into multiple files for better organization - perhaps one for the main thread & one for the worker thread?
+- See what else I can move off the main thread into the worker threads to improve performance.
 
-- Add get_tile and set_tile, (possibly the same for chunks & regions) to the chunk_manager for easier access to tiles without needing to get the chunk/region first.
+- Add getters and setters for accessing terrain data in a thread-safe way.
 
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
-
-- Check my code and make private variables start with an underscore: "In essence, private instance variables should be prefixed with an underscore to indicate that they are intended for internal use only."
 
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
 

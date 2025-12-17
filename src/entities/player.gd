@@ -1,12 +1,12 @@
 class_name Player extends CharacterBody2D
 
-@export var SPEED: int = 300
+@export var speed: int = 300
 #@export var JUMP_VELOCITY: int = -250
 #@export var STEP_HEIGHT: int = 8
 #@export var COYOTE_TIME: float = 0.2
-@export var ZOOM_AMOUNT: float = 0.1
-@export var MINIMUM_ZOOM: Vector2 = Vector2(0.001, 0.001)
-@export var MAXIMUM_ZOOM: Vector2 = Vector2(100, 100)
+@export var zoom_amount: float = 0.1
+@export var minimum_zoom: Vector2 = Vector2(0.001, 0.001)
+@export var maximum_zoom: Vector2 = Vector2(100, 100)
 
 # @onready var _sprite: Sprite2D = $Sprite2D
 @onready var _camera: Camera2D = $Camera2D
@@ -84,30 +84,27 @@ func _input(event: InputEvent) -> void:
 	# Handle zoom
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_camera.zoom.x *= 1 + ZOOM_AMOUNT
-			_camera.zoom.y *= 1 + ZOOM_AMOUNT
+			_camera.zoom.x *= 1 + zoom_amount
+			_camera.zoom.y *= 1 + zoom_amount
 			# Make sure the camera zoom doesn't zoom too far
-			if _camera.zoom > MAXIMUM_ZOOM:
-				_camera.zoom = MAXIMUM_ZOOM
-
+			if _camera.zoom > maximum_zoom:
+				_camera.zoom = maximum_zoom
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_camera.zoom.x *= 1 - ZOOM_AMOUNT
-			_camera.zoom.y *= 1 - ZOOM_AMOUNT
+			_camera.zoom.x *= 1 - zoom_amount
+			_camera.zoom.y *= 1 - zoom_amount
 			# Make sure the zoom isn't 0
-			if _camera.zoom < MINIMUM_ZOOM:
-				_camera.zoom = MINIMUM_ZOOM
-
+			if _camera.zoom < minimum_zoom:
+				_camera.zoom = minimum_zoom
 	# Get the input direction and handle the movement/deceleration.
 	if Input.is_action_pressed("move_left"):
-		velocity.x = - SPEED
+		velocity.x = - speed
 	elif Input.is_action_pressed("move_right"):
-		velocity.x = SPEED
+		velocity.x = speed
 	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED)
-
+		velocity.x = move_toward(velocity.x, 0, speed)
 	if Input.is_action_pressed("move_up"):
-		velocity.y = - SPEED
+		velocity.y = - speed
 	elif Input.is_action_pressed("move_down"):
-		velocity.y = SPEED
+		velocity.y = speed
 	else:
-		velocity.y = move_toward(velocity.y, 0, SPEED)
+		velocity.y = move_toward(velocity.y, 0, speed)
