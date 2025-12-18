@@ -7,7 +7,7 @@ class_name Player extends CharacterBody2D
 @export var zoom_amount: float = 0.1
 @export var minimum_zoom: Vector2 = Vector2(0.001, 0.001)
 @export var maximum_zoom: Vector2 = Vector2(100, 100)
-@export var collision_box_size: Vector2 = Vector2(14, 14) # Size of the player's collision box
+@export var collision_box_size: Vector2 = Vector2(10, 16) # Size of the player's collision box
 @export var chunk_manager_path: NodePath = NodePath("../ChunkManager") # Path to ChunkManager node
 
 # @onready var _sprite: Sprite2D = $Sprite2D
