@@ -8,6 +8,7 @@ class_name Player extends CharacterBody2D
 @export var minimum_zoom: Vector2 = Vector2(0.001, 0.001)
 @export var maximum_zoom: Vector2 = Vector2(100, 100)
 @export var collision_box_size: Vector2 = Vector2(14, 14) # Size of the player's collision box
+@export var chunk_manager_path: NodePath = NodePath("../ChunkManager") # Path to ChunkManager node
 
 # @onready var _sprite: Sprite2D = $Sprite2D
 @onready var _camera: Camera2D = $Camera2D
@@ -23,9 +24,12 @@ func _ready() -> void:
 	_update_current_chunk()
 	
 	# Get reference to ChunkManager and create collision detector
-	var chunk_manager = get_node("../ChunkManager") as ChunkManager
-	if chunk_manager:
-		_collision_detector = CollisionDetector.new(chunk_manager)
+	if not chunk_manager_path.is_empty():
+		var chunk_manager = get_node(chunk_manager_path) as ChunkManager
+		if chunk_manager:
+			_collision_detector = CollisionDetector.new(chunk_manager)
+		else:
+			push_warning("Player: ChunkManager not found at path: ", chunk_manager_path)
 
 func _physics_process(delta: float) -> void:
 	# Apply swept AABB collision detection against raw chunk data

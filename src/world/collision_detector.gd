@@ -4,6 +4,10 @@ class_name CollisionDetector extends RefCounted
 # This class provides collision detection for AABBs (Axis-Aligned Bounding Boxes)
 # moving through a tile-based world, checking against the raw chunk data.
 
+# Constants
+const VELOCITY_EPSILON: float = 0.0001 # Minimum velocity magnitude to consider for movement
+const TILE_CENTER_OFFSET: Vector2 = Vector2(0.5, 0.5) # Offset to get tile center from corner
+
 var _chunk_manager: ChunkManager
 
 
@@ -30,7 +34,7 @@ func sweep_aabb(aabb_pos: Vector2, aabb_size: Vector2, velocity: Vector2) -> Dic
 	}
 	
 	# If velocity is zero, no movement needed
-	if velocity.length_squared() < 0.0001:
+	if velocity.length_squared() < VELOCITY_EPSILON:
 		return result
 	
 	# Calculate AABB bounds
@@ -62,7 +66,6 @@ func sweep_aabb(aabb_pos: Vector2, aabb_size: Vector2, velocity: Vector2) -> Dic
 		result.normal = x_collision.normal
 	
 	# Recalculate bounds for Y sweep based on X result
-	half_size = aabb_size * 0.5
 	aabb_min = aabb_pos - half_size
 	aabb_max = aabb_pos + half_size
 	target_pos = aabb_pos + velocity
@@ -97,7 +100,7 @@ func _sweep_axis(aabb_pos: Vector2, half_size: Vector2, velocity: Vector2, axis:
 	
 	# Extract axis component
 	var axis_velocity = velocity.dot(axis) * axis
-	if axis_velocity.length_squared() < 0.0001:
+	if axis_velocity.length_squared() < VELOCITY_EPSILON:
 		return result
 	
 	var target_pos = aabb_pos + axis_velocity
@@ -111,8 +114,8 @@ func _sweep_axis(aabb_pos: Vector2, half_size: Vector2, velocity: Vector2, axis:
 		for tile_y in range(tile_min.y, tile_max.y + 1):
 			var tile_world_pos = Vector2(tile_x, tile_y)
 			
-			# Check if this tile is solid
-			if not _chunk_manager.is_solid_at_world_pos(tile_world_pos + Vector2(0.5, 0.5)):
+			# Check if this tile is solid (check at tile center)
+			if not _chunk_manager.is_solid_at_world_pos(tile_world_pos + TILE_CENTER_OFFSET):
 				continue
 			
 			# Calculate AABB vs tile collision time
@@ -162,9 +165,10 @@ func _aabb_vs_tile_sweep(aabb_pos: Vector2, half_size: Vector2, velocity: Vector
 		entry_time.x = (tile_max.x - aabb_min.x) / velocity.x
 		exit_time.x = (tile_min.x - aabb_max.x) / velocity.x
 	else:
-		# No movement on X axis
+		# No movement on X axis - check for existing overlap
 		if aabb_max.x <= tile_min.x or aabb_min.x >= tile_max.x:
 			return -1.0 # No overlap possible
+		# Already overlapping on X axis (always entering, never exiting)
 		entry_time.x = -INF
 		exit_time.x = INF
 	
@@ -176,9 +180,10 @@ func _aabb_vs_tile_sweep(aabb_pos: Vector2, half_size: Vector2, velocity: Vector
 		entry_time.y = (tile_max.y - aabb_min.y) / velocity.y
 		exit_time.y = (tile_min.y - aabb_max.y) / velocity.y
 	else:
-		# No movement on Y axis
+		# No movement on Y axis - check for existing overlap
 		if aabb_max.y <= tile_min.y or aabb_min.y >= tile_max.y:
 			return -1.0 # No overlap possible
+		# Already overlapping on Y axis (always entering, never exiting)
 		entry_time.y = -INF
 		exit_time.y = INF
 	

@@ -236,15 +236,18 @@ func world_to_chunk_pos(world_pos: Vector2) -> Vector2i:
 	return Vector2i(int(floor(world_pos.x / GlobalSettings.CHUNK_SIZE)), int(floor(world_pos.y / GlobalSettings.CHUNK_SIZE)))
 
 
+# Helper function for positive modulo (handles negative coordinates)
+func _positive_fmod(value: float, divisor: float) -> float:
+	var result = fmod(value, divisor)
+	if result < 0:
+		result += divisor
+	return result
+
+
 # Converts world position to tile position within a chunk (0-31)
 func world_to_tile_pos(world_pos: Vector2) -> Vector2i:
-	var fx = fmod(world_pos.x, GlobalSettings.CHUNK_SIZE)
-	var fy = fmod(world_pos.y, GlobalSettings.CHUNK_SIZE)
-	# Handle negative coordinates properly
-	if fx < 0:
-		fx += GlobalSettings.CHUNK_SIZE
-	if fy < 0:
-		fy += GlobalSettings.CHUNK_SIZE
+	var fx = _positive_fmod(world_pos.x, GlobalSettings.CHUNK_SIZE)
+	var fy = _positive_fmod(world_pos.y, GlobalSettings.CHUNK_SIZE)
 	return Vector2i(int(floor(fx)), int(floor(fy)))
 
 
