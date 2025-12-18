@@ -7,6 +7,7 @@ class_name Player extends CharacterBody2D
 @export var zoom_amount: float = 0.1
 @export var minimum_zoom: Vector2 = Vector2(0.001, 0.001)
 @export var maximum_zoom: Vector2 = Vector2(100, 100)
+@export var collision_box_size: Vector2 = Vector2(14, 14) # Size of the player's collision box
 
 # @onready var _sprite: Sprite2D = $Sprite2D
 @onready var _camera: Camera2D = $Camera2D
@@ -14,38 +15,35 @@ class_name Player extends CharacterBody2D
 
 #var _was_on_floor: bool = false
 var _current_chunk: Vector2i = Vector2i.ZERO
+var _collision_detector: CollisionDetector = null
 
 func _ready() -> void:
 	# Calculate initial player chunk/region
 	await get_tree().process_frame
 	_update_current_chunk()
+	
+	# Get reference to ChunkManager and create collision detector
+	var chunk_manager = get_node("../ChunkManager") as ChunkManager
+	if chunk_manager:
+		_collision_detector = CollisionDetector.new(chunk_manager)
 
 func _physics_process(delta: float) -> void:
-	# This is a top-down movement system for now
-	position.x += velocity.x * delta
-	position.y += velocity.y * delta
-
+	# Apply swept AABB collision detection against raw chunk data
+	if _collision_detector:
+		var movement = velocity * delta
+		var collision_result = _collision_detector.sweep_aabb(position, collision_box_size, movement)
+		
+		# Update position based on collision result
+		position = collision_result.position
+		
+		# If we collided, update velocity for sliding behavior
+		if collision_result.collided:
+			velocity = collision_result.velocity / delta
+	else:
+		# Fallback to simple movement if collision detector not ready
+		position += velocity * delta
+	
 	_update_current_chunk()
-	# Add the gravity.
-	# if not is_on_floor():
-	# 	velocity += get_gravity() * delta
-	# 	# Start coyote timer when walking off a ledge
-	# 	if _was_on_floor and _coyote_timer.is_stopped():
-	# 		_coyote_timer.start()
-	# else:
-	# 	# Reset coyote timer when on floor
-	# 	_coyote_timer.stop()
-	# _was_on_floor = is_on_floor() # Update floor state
-	# # Handle stepping up slopes
-	# handle_step_up()
-	# # Move the player.
-	# move_and_slide()
-	
-	# Just write my own collision logic since this is such a specialized geometry
-	# I can reuse much of what I already have, such as coyote jump, and the wall step but 
-	# I need to manually move the player and handle collisions if they occur.
-	
-	#var data = move_and_collide(velocity)
 
 
 # func handle_step_up() -> void:

@@ -226,6 +226,48 @@ func _recycle_chunk(chunk: Chunk) -> void:
 			chunk.queue_free() # Free excess chunks
 
 
+# Gets the chunk at a given chunk position
+func get_chunk_at(chunk_pos: Vector2i) -> Chunk:
+	return _chunks.get(chunk_pos, null)
+
+
+# Converts world position to chunk position
+func world_to_chunk_pos(world_pos: Vector2) -> Vector2i:
+	return Vector2i(int(floor(world_pos.x / GlobalSettings.CHUNK_SIZE)), int(floor(world_pos.y / GlobalSettings.CHUNK_SIZE)))
+
+
+# Converts world position to tile position within a chunk (0-31)
+func world_to_tile_pos(world_pos: Vector2) -> Vector2i:
+	var fx = fmod(world_pos.x, GlobalSettings.CHUNK_SIZE)
+	var fy = fmod(world_pos.y, GlobalSettings.CHUNK_SIZE)
+	# Handle negative coordinates properly
+	if fx < 0:
+		fx += GlobalSettings.CHUNK_SIZE
+	if fy < 0:
+		fy += GlobalSettings.CHUNK_SIZE
+	return Vector2i(int(floor(fx)), int(floor(fy)))
+
+
+# Checks if a tile at the given world position is solid
+func is_solid_at_world_pos(world_pos: Vector2) -> bool:
+	var chunk_pos = world_to_chunk_pos(world_pos)
+	var chunk = get_chunk_at(chunk_pos)
+	if chunk == null:
+		return false # Treat unloaded chunks as non-solid
+	var tile_pos = world_to_tile_pos(world_pos)
+	return chunk.is_tile_solid(tile_pos.x, tile_pos.y)
+
+
+# Gets terrain data at a world position
+func get_tile_at_world_pos(world_pos: Vector2) -> Array:
+	var chunk_pos = world_to_chunk_pos(world_pos)
+	var chunk = get_chunk_at(chunk_pos)
+	if chunk == null:
+		return [0, 0] # Return air if chunk not loaded
+	var tile_pos = world_to_tile_pos(world_pos)
+	return chunk.get_tile_at(tile_pos.x, tile_pos.y)
+
+
 # Cleanup on exit
 func _exit_tree() -> void:
 	if _chunk_loader:
