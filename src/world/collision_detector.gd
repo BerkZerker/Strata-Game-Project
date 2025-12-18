@@ -53,36 +53,35 @@ func sweep_aabb(aabb_pos: Vector2, aabb_size: Vector2, velocity: Vector2) -> Dic
 	
 	# Sweep along X axis first
 	var x_collision = _sweep_axis(aabb_pos, half_size, velocity, Vector2.RIGHT, tile_min, tile_max)
+	
+	# Update position and velocity after X sweep
+	aabb_pos = x_collision.position
+	velocity = x_collision.velocity
 	if x_collision.collided:
 		result.collided = true
-		result.position = x_collision.position
-		result.velocity = x_collision.velocity
 		result.normal = x_collision.normal
-		
-		# Update position for Y sweep
-		aabb_pos = result.position
-		velocity = result.velocity
-		half_size = aabb_size * 0.5
-		aabb_min = aabb_pos - half_size
-		aabb_max = aabb_pos + half_size
-		target_pos = aabb_pos + velocity
-		target_min = target_pos - half_size
-		target_max = target_pos + half_size
-		check_min = Vector2(min(aabb_min.x, target_min.x), min(aabb_min.y, target_min.y))
-		check_max = Vector2(max(aabb_max.x, target_max.x), max(aabb_max.y, target_max.y))
-		tile_min = Vector2i(int(floor(check_min.x)), int(floor(check_min.y)))
-		tile_max = Vector2i(int(ceil(check_max.x)), int(ceil(check_max.y)))
+	
+	# Recalculate bounds for Y sweep based on X result
+	half_size = aabb_size * 0.5
+	aabb_min = aabb_pos - half_size
+	aabb_max = aabb_pos + half_size
+	target_pos = aabb_pos + velocity
+	target_min = target_pos - half_size
+	target_max = target_pos + half_size
+	check_min = Vector2(min(aabb_min.x, target_min.x), min(aabb_min.y, target_min.y))
+	check_max = Vector2(max(aabb_max.x, target_max.x), max(aabb_max.y, target_max.y))
+	tile_min = Vector2i(int(floor(check_min.x)), int(floor(check_min.y)))
+	tile_max = Vector2i(int(ceil(check_max.x)), int(ceil(check_max.y)))
 	
 	# Sweep along Y axis
 	var y_collision = _sweep_axis(aabb_pos, half_size, velocity, Vector2.DOWN, tile_min, tile_max)
+	
+	# Final position is the result of Y sweep
+	result.position = y_collision.position
+	result.velocity = y_collision.velocity
 	if y_collision.collided:
 		result.collided = true
-		result.position = y_collision.position
-		result.velocity = y_collision.velocity
 		result.normal = y_collision.normal
-	elif not result.collided:
-		# No collision on either axis, move to target
-		result.position = target_pos
 	
 	return result
 
