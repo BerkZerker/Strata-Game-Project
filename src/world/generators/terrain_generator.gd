@@ -16,26 +16,33 @@ func _init(generation_seed: int) -> void:
 
 
 # Generates a chunk of terrain data based on the chunk position in chunk coordinates (not tile coordinates)
-func generate_chunk(chunk_pos: Vector2i) -> Array:
-	var chunk = []
+func generate_chunk(chunk_pos: Vector2i) -> PackedByteArray:
+	var chunk_size = GlobalSettings.CHUNK_SIZE
+	var data = PackedByteArray()
+	data.resize(chunk_size * chunk_size * 2) # 2 bytes per tile: [id, cell_number]
+	
 	var cell_number = 0 # I will need to track this for each material type and track it globally in the generator
 
-	for i in range(GlobalSettings.CHUNK_SIZE):
-		chunk.append([])
-		for j in range(GlobalSettings.CHUNK_SIZE):
+	for i in range(chunk_size): # y
+		for j in range(chunk_size): # x
 			# Get the noise value for this position (i & j are reversed, don't ask why, nobody knows)
-			var value = _noise.get_noise_2d(float(chunk_pos.x * GlobalSettings.CHUNK_SIZE + j), float(chunk_pos.y * GlobalSettings.CHUNK_SIZE + i))
+			var value = _noise.get_noise_2d(float(chunk_pos.x * chunk_size + j), float(chunk_pos.y * chunk_size + i))
 
+			var tile_id = 0
 			# Santize the value to be an int - solid is 1 air is 0
 			if value > 0.3:
-				value = 3 # Stone
+				tile_id = 3 # Stone
 			elif value > 0.15:
-				value = 1 # Dirt
+				tile_id = 1 # Dirt
 			elif value > 0.1:
-				value = 2 # Grass
+				tile_id = 2 # Grass
 			else:
-				value = 0 # Air
+				tile_id = 0 # Air
 			
-			chunk[i].append([value, cell_number])
+			# Store interleaved: [id, cell_number]
+			# i is row (y), j is col (x)
+			var index = (i * chunk_size + j) * 2
+			data[index] = tile_id
+			data[index + 1] = cell_number
 
-	return chunk
+	return data

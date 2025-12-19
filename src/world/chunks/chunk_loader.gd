@@ -194,20 +194,24 @@ func _process_one_chunk() -> void:
 
 
 # Helper to generate the chunk image in the worker thread
-func _generate_visual_image(terrain_data: Array) -> Image:
-	var image = Image.create(GlobalSettings.CHUNK_SIZE, GlobalSettings.CHUNK_SIZE, false, Image.FORMAT_RGBA8)
+func _generate_visual_image(terrain_data: PackedByteArray) -> Image:
+	var chunk_size = GlobalSettings.CHUNK_SIZE
+	var image = Image.create(chunk_size, chunk_size, false, Image.FORMAT_RGBA8)
 	
 	# Pre-calculate factors to avoid division in loop
 	var inv_255 = 1.0 / 255.0
 	
-	for x in range(GlobalSettings.CHUNK_SIZE):
-		for y in range(GlobalSettings.CHUNK_SIZE):
-			# Matches logic in original Chunk.gd: _terrain_data[-y - 1][x]
-			var row_index = -y - 1
-			var tile_info = terrain_data[row_index][x]
+	for x in range(chunk_size):
+		for y in range(chunk_size):
+			# Original logic: _terrain_data[-y - 1][x]
+			# -y - 1 means we start from the last row.
+			# If y=0, row is -1 (index SIZE-1).
+			# If y=SIZE-1, row is -SIZE (index 0).
+			var effective_y = (chunk_size - 1) - y
+			var index = (effective_y * chunk_size + x) * 2
 			
-			var tile_id = float(tile_info[0])
-			var cell_id = float(tile_info[1])
+			var tile_id = float(terrain_data[index])
+			var cell_id = float(terrain_data[index + 1])
 			
 			# Set pixel (x, y)
 			image.set_pixel(x, y, Color(tile_id * inv_255, cell_id * inv_255, 0, 0))
