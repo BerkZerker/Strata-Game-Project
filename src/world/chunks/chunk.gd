@@ -56,7 +56,6 @@ func get_tile_at(tile_x: int, tile_y: int) -> Array:
 	return _terrain_data[tile_y][tile_x]
 
 
-# Checks if a tile at the given position is solid (non-air)
-func is_tile_solid(tile_x: int, tile_y: int) -> bool:
-	var tile_data = get_tile_at(tile_x, tile_y)
-	return tile_data[0] > 0 # Air is 0, anything else is solid
+# Returns the terrain data array
+func get_terrain_data() -> Array:
+	return _terrain_data

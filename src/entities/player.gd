@@ -1,9 +1,9 @@
 class_name Player extends CharacterBody2D
 
 # Movement Parameters
-@export var speed: float = 200.0
-@export var acceleration: float = 1200.0
-@export var friction: float = 1200.0
+@export var speed: float = 180.0
+@export var acceleration: float = 1500.0
+@export var friction: float = 2000.0
 @export var jump_velocity: float = -400.0
 @export var gravity: float = 800.0
 @export var step_height: float = 6.0
@@ -24,18 +24,19 @@ var _current_chunk: Vector2i = Vector2i.ZERO
 var _collision_detector: CollisionDetector = null
 var _is_on_floor: bool = false
 var _coyote_timer: float = 0.0
+var _chunk_manager_ref: ChunkManager = null
+
+
+func setup_chunk_manager(chunk_manager: ChunkManager) -> void:
+	_chunk_manager_ref = chunk_manager
+	_collision_detector = CollisionDetector.new(_chunk_manager_ref)
+
 
 func _ready() -> void:
 	# Calculate initial player chunk/region
 	await get_tree().process_frame
 	_update_current_chunk()
-	
-	if not chunk_manager_path.is_empty():
-		var chunk_manager = get_node(chunk_manager_path) as ChunkManager
-		if chunk_manager:
-			_collision_detector = CollisionDetector.new(chunk_manager)
-		else:
-			push_warning("Player: ChunkManager not found at path: ", chunk_manager_path)
+
 
 func _physics_process(delta: float) -> void:
 	if not _collision_detector:

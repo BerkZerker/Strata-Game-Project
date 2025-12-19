@@ -1,9 +1,5 @@
 class_name CollisionDetector extends RefCounted
 
-# Swept AABB collision detection against raw chunk data
-# This class provides collision detection for AABBs (Axis-Aligned Bounding Boxes)
-# moving through a tile-based world, checking against the raw chunk data.
-
 # Constants
 const VELOCITY_EPSILON: float = 0.0001 # Minimum velocity magnitude to consider for movement
 const TILE_CENTER_OFFSET: Vector2 = Vector2(0.5, 0.5) # Offset to get tile center from corner
@@ -89,6 +85,26 @@ func sweep_aabb(aabb_pos: Vector2, aabb_size: Vector2, velocity: Vector2) -> Dic
 	return result
 
 
+# Checks if an AABB overlaps with any solid tiles
+func intersect_aabb(aabb_pos: Vector2, aabb_size: Vector2) -> bool:
+	var half_size = aabb_size * 0.5
+	var aabb_min = aabb_pos - half_size
+	var aabb_max = aabb_pos + half_size
+	
+	var tile_min = Vector2i(int(floor(aabb_min.x)), int(floor(aabb_min.y)))
+	var tile_max = Vector2i(int(ceil(aabb_max.x)), int(ceil(aabb_max.y)))
+	
+	for tile_x in range(tile_min.x, tile_max.x):
+		for tile_y in range(tile_min.y, tile_max.y):
+			# Use point check for the tile logic. 
+			# Note: We check the tile coordinate. is_solid_at_world_pos expects world coords.
+			# Since 1 unit = 1 tile, tile_x/y are world coords.
+			if _chunk_manager.is_solid_at_world_pos(Vector2(tile_x, tile_y) + TILE_CENTER_OFFSET):
+				return true
+	
+	return false
+
+
 # Sweeps along a single axis and returns collision info
 func _sweep_axis(aabb_pos: Vector2, half_size: Vector2, velocity: Vector2, axis: Vector2, tile_min: Vector2i, tile_max: Vector2i) -> Dictionary:
 	var result = {
@@ -169,7 +185,7 @@ func _aabb_vs_tile_sweep(aabb_pos: Vector2, half_size: Vector2, velocity: Vector
 		if aabb_max.x <= tile_min.x or aabb_min.x >= tile_max.x:
 			return -1.0 # No overlap possible
 		# Already overlapping on X axis (always entering, never exiting)
-		entry_time.x = -INF
+		entry_time.x = - INF
 		exit_time.x = INF
 	
 	# Y axis
@@ -184,7 +200,7 @@ func _aabb_vs_tile_sweep(aabb_pos: Vector2, half_size: Vector2, velocity: Vector
 		if aabb_max.y <= tile_min.y or aabb_min.y >= tile_max.y:
 			return -1.0 # No overlap possible
 		# Already overlapping on Y axis (always entering, never exiting)
-		entry_time.y = -INF
+		entry_time.y = - INF
 		exit_time.y = INF
 	
 	# Find the latest entry time and earliest exit time
@@ -196,28 +212,3 @@ func _aabb_vs_tile_sweep(aabb_pos: Vector2, half_size: Vector2, velocity: Vector
 		return -1.0 # No collision
 	
 	return max(0.0, entry)
-
-
-# Checks if an AABB overlaps with any solid tiles
-func intersect_aabb(aabb_pos: Vector2, aabb_size: Vector2) -> bool:
-	var half_size = aabb_size * 0.5
-	var aabb_min = aabb_pos - half_size
-	var aabb_max = aabb_pos + half_size
-	
-	var tile_min = Vector2i(int(floor(aabb_min.x)), int(floor(aabb_min.y)))
-	var tile_max = Vector2i(int(ceil(aabb_max.x)), int(ceil(aabb_max.y)))
-	
-	for tile_x in range(tile_min.x, tile_max.x):
-		for tile_y in range(tile_min.y, tile_max.y):
-			# Use point check for the tile logic. 
-			# Note: We check the tile coordinate. is_solid_at_world_pos expects world coords.
-			# Since 1 unit = 1 tile, tile_x/y are world coords.
-			if _chunk_manager.is_solid_at_world_pos(Vector2(tile_x, tile_y) + TILE_CENTER_OFFSET):
-				return true
-	
-	return false
-
-
-# Simple point check for if a position is in solid terrain
-func is_point_in_solid(world_pos: Vector2) -> bool:
-	return _chunk_manager.is_solid_at_world_pos(world_pos)

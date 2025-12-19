@@ -258,7 +258,8 @@ func is_solid_at_world_pos(world_pos: Vector2) -> bool:
 	if chunk == null:
 		return false # Treat unloaded chunks as non-solid
 	var tile_pos = world_to_tile_pos(world_pos)
-	return chunk.is_tile_solid(tile_pos.x, tile_pos.y)
+	var tile_data = chunk.get_tile_at(tile_pos.x, tile_pos.y)
+	return tile_data[0] > 0 # Air is 0, anything else is solid
 
 
 # Gets terrain data at a world position
