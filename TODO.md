@@ -15,3 +15,7 @@
     Note that I will need a dictionary to track which cell numbers have been used for all material types that fracture into cells.
 
 - Implement a flood fill algorithm for terrain modification based on the cell terrain data. Start with breaking.
+
+- Build a movement controller for testing terrain interaction - walking, jumping, falling, and colliding with terrain, this will come in handy when adding more entities besides the player and keep the player clean.
+
+- Consider moving to a component-based system when appliciable - so far I'm thinking stuff like entities, terrain generation, and items in the future.

@@ -16,7 +16,6 @@ class_name Player extends CharacterBody2D
 
 # Collision / World
 @export var collision_box_size: Vector2 = Vector2(10, 16)
-@export var chunk_manager_path: NodePath = NodePath("../ChunkManager")
 
 @onready var _camera: Camera2D = $Camera2D
 
