@@ -50,7 +50,7 @@ func _process_build_queue() -> void:
 	
 	for build_data in build_batch:
 		var chunk_pos: Vector2i = build_data["pos"]
-		var terrain_data: Array = build_data["terrain_data"]
+		var terrain_data: PackedByteArray = build_data["terrain_data"]
 		var visual_image: Image = build_data["visual_image"]
 		
 		# Skip if chunk already exists (might have been built while in queue)
@@ -258,8 +258,7 @@ func is_solid_at_world_pos(world_pos: Vector2) -> bool:
 	if chunk == null:
 		return false # Treat unloaded chunks as non-solid
 	var tile_pos = world_to_tile_pos(world_pos)
-	var tile_data = chunk.get_tile_at(tile_pos.x, tile_pos.y)
-	return tile_data[0] > 0 # Air is 0, anything else is solid
+	return chunk.get_tile_id_at(tile_pos.x, tile_pos.y) > 0 # Air is 0, anything else is solid
 
 
 # Gets terrain data at a world position

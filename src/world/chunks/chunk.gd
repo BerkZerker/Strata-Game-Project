@@ -5,7 +5,7 @@ class_name Chunk extends Node2D
 
 static var _shared_quad_mesh: QuadMesh
 
-var _terrain_data: Array = []
+var _terrain_data: PackedByteArray = PackedByteArray()
 
 
 # Called when the node is added to the scene.
@@ -17,8 +17,8 @@ func _ready() -> void:
 
 
 # Sets up the chunk's terrain data and position
-func generate(chunk_data: Array, chunk_pos: Vector2i) -> void:
-	_terrain_data = chunk_data # Just a reference, not a copy. More memory efficient
+func generate(chunk_data: PackedByteArray, chunk_pos: Vector2i) -> void:
+	_terrain_data = chunk_data # Just a reference, not a copy (COW optimization works well here)
 	position = Vector2(chunk_pos.x * GlobalSettings.CHUNK_SIZE, chunk_pos.y * GlobalSettings.CHUNK_SIZE)
 
 
@@ -31,7 +31,7 @@ func build(visual_image: Image) -> void:
 # Resets the chunk for pooling
 func reset() -> void:
 	visible = false
-	_terrain_data = []
+	_terrain_data.clear()
 	# Always clear texture to prevent memory leaks
 	if _visual_mesh.material:
 		_visual_mesh.material.set_shader_parameter("chunk_data_texture", null)
@@ -49,13 +49,32 @@ func setup_visual_mesh(image: Image):
 
 # Gets terrain data at a specific tile position within the chunk (0-31, 0-31)
 func get_tile_at(tile_x: int, tile_y: int) -> Array:
-	if tile_y < 0 or tile_y >= _terrain_data.size():
+	if tile_y < 0 or tile_y >= GlobalSettings.CHUNK_SIZE:
 		return [0, 0] # Return air if out of bounds
-	if tile_x < 0 or tile_x >= _terrain_data[tile_y].size():
+	if tile_x < 0 or tile_x >= GlobalSettings.CHUNK_SIZE:
 		return [0, 0] # Return air if out of bounds
-	return _terrain_data[tile_y][tile_x]
+	
+	var index = (tile_y * GlobalSettings.CHUNK_SIZE + tile_x) * 2
+	if index >= _terrain_data.size():
+		return [0, 0]
+		
+	return [_terrain_data[index], _terrain_data[index + 1]]
+
+
+# Gets just the tile ID at a specific position (Optimized for collision - no Array allocation)
+func get_tile_id_at(tile_x: int, tile_y: int) -> int:
+	if tile_y < 0 or tile_y >= GlobalSettings.CHUNK_SIZE:
+		return 0 # Return air if out of bounds
+	if tile_x < 0 or tile_x >= GlobalSettings.CHUNK_SIZE:
+		return 0 # Return air if out of bounds
+	
+	var index = (tile_y * GlobalSettings.CHUNK_SIZE + tile_x) * 2
+	if index >= _terrain_data.size():
+		return 0
+		
+	return _terrain_data[index]
 
 
 # Returns the terrain data array
-func get_terrain_data() -> Array:
+func get_terrain_data() -> PackedByteArray:
 	return _terrain_data
