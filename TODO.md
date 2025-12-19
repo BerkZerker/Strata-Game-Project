@@ -1,16 +1,12 @@
 # TODO List
 
-- Add getters and setters for accessing terrain data in a thread-safe way.
+- Add getters and setters for accessing terrain data in a thread-safe way - try and find the most efficient way to do this espically since terrain data access will be frequent and per-tile could be a bottleneck.
+
+- Re-implement basic editing. (This will require adding some editing functions to the chunk_manager class?)
 
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
 
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
-
----
-
-- Re-implement collision detection for the terrain chunks using swept AABB checking directly against the chunk data rather than using Godot's built-in collision shapes. This will allow for much more precise collision detection and will be necessary for proper terrain editing, as well as better performance.
-
-- Re-implement basic editing. (This will require adding some editing functions to the chunk_manager class?)
 
 - Research algorithms to generate tessellating shapes as cells in the terrain using data driver attributes such as roughness, scale variance, and starting shape. Maybe voronoi diagrams & Lloyd's relaxation?
 

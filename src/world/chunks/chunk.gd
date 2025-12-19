@@ -45,3 +45,17 @@ func setup_visual_mesh(image: Image):
 
 	var data_texture = ImageTexture.create_from_image(image)
 	_visual_mesh.material.set_shader_parameter("chunk_data_texture", data_texture)
+
+
+# Gets terrain data at a specific tile position within the chunk (0-31, 0-31)
+func get_tile_at(tile_x: int, tile_y: int) -> Array:
+	if tile_y < 0 or tile_y >= _terrain_data.size():
+		return [0, 0] # Return air if out of bounds
+	if tile_x < 0 or tile_x >= _terrain_data[tile_y].size():
+		return [0, 0] # Return air if out of bounds
+	return _terrain_data[tile_y][tile_x]
+
+
+# Returns the terrain data array
+func get_terrain_data() -> Array:
+	return _terrain_data
