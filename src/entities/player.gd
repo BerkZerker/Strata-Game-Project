@@ -4,14 +4,15 @@ class_name Player extends CharacterBody2D
 @export var speed: float = 200.0
 @export var acceleration: float = 1200.0
 @export var friction: float = 1200.0
-@export var jump_velocity: float = -300.0
+@export var jump_velocity: float = -400.0
 @export var gravity: float = 800.0
-@export var step_height: float = 4.0
+@export var step_height: float = 6.0
+@export var coyote_time: float = 0.1
 
 # Camera / View
 @export var zoom_amount: float = 0.1
-@export var minimum_zoom: Vector2 = Vector2(0.05, 0.05)
-@export var maximum_zoom: Vector2 = Vector2(5.0, 5.0)
+@export var minimum_zoom: Vector2 = Vector2(0.01, 0.01)
+@export var maximum_zoom: Vector2 = Vector2(10.0, 10.0)
 
 # Collision / World
 @export var collision_box_size: Vector2 = Vector2(10, 16)
@@ -22,6 +23,7 @@ class_name Player extends CharacterBody2D
 var _current_chunk: Vector2i = Vector2i.ZERO
 var _collision_detector: CollisionDetector = null
 var _is_on_floor: bool = false
+var _coyote_timer: float = 0.0
 
 func _ready() -> void:
 	# Calculate initial player chunk/region
@@ -39,6 +41,12 @@ func _physics_process(delta: float) -> void:
 	if not _collision_detector:
 		return
 
+	# Update coyote timer
+	if _is_on_floor:
+		_coyote_timer = coyote_time
+	else:
+		_coyote_timer -= delta
+
 	# 1. Apply Gravity
 	velocity.y += gravity * delta
 	
@@ -50,22 +58,21 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, friction * delta)
 	
 	# 3. Handle Jump
-	if Input.is_action_just_pressed("move_up") and _is_on_floor:
+	if Input.is_action_just_pressed("jump") and (_is_on_floor or _coyote_timer > 0.0):
 		velocity.y = jump_velocity
 		_is_on_floor = false
+		_coyote_timer = 0.0
 	
 	# 4. Apply Horizontal Movement (X Axis)
 	var start_pos = position
 	var x_move = Vector2(velocity.x * delta, 0)
 	var result_x = _collision_detector.sweep_aabb(position, collision_box_size, x_move)
-	
-	var moved_x = false
-	
+		
 	# Check for step up opportunity if we hit a wall and are on the floor
 	if result_x.collided and _is_on_floor and abs(velocity.x) > 0.1:
 		# Try to step up
 		if _try_step_up(x_move, start_pos):
-			moved_x = true
+			pass
 		else:
 			# Step failed, accept the collision
 			position = result_x.position
@@ -113,7 +120,7 @@ func _try_step_up(intended_move: Vector2, original_pos: Vector2) -> bool:
 		
 	# 3. Snap Down
 	# Try to move down by step_height + a bit to ensure contact
-	var snap_vec = Vector2(0, step_height * 2.0) 
+	var snap_vec = Vector2(0, step_height * 2.0)
 	var result_down = _collision_detector.sweep_aabb(result_fwd.position, collision_box_size, snap_vec)
 	
 	# We must hit the floor to count as a valid step
