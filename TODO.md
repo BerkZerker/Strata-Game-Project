@@ -2,6 +2,8 @@
 
 - Re-implement basic editing, using the new chunk data access methods. I should be able to the mouse and left click to edit terrain, with a simple gui to show different terrain types (air, dirt, stone, grass, etc) and a simple circle and square brushes to choose from. There should be a brush preview as well, showing where the brush will affect the terrain. The brush size can be adjusted with the + and - keys. This should use the GUI_manager node in the main scene to start building the GUI. - DONE?
 
+- Figure out a solution to the reference problem, the player and input manager need access to the chunk manager, perhaps a bus node in the game instance? I need to research if there are any already existing solutions. I also need to keep my code clean and well compartmentalized - each file should have a specific purpose and keep the logic internalized, high complexity within files, low complexity between different scripts.
+
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
 
 - Check over all my recent edits with Claude & myself to make sure the AI generated code is up to my standards and refactor as needed before introducing integrated profiling and documentation.
