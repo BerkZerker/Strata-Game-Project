@@ -1,10 +1,14 @@
 # TODO
 
-- Re-implement basic editing, using the new chunk data access methods. I should be able to the mouse and left click to edit terrain, with a simple gui to show different terrain types (air, dirt, stone, grass, etc) and a simple circle and square brushes to choose from. There should be a brush preview as well, showing where the brush will affect the terrain. The brush size can be adjusted with the + and - keys.
+- Re-implement basic editing, using the new chunk data access methods. I should be able to the mouse and left click to edit terrain, with a simple gui to show different terrain types (air, dirt, stone, grass, etc) and a simple circle and square brushes to choose from. There should be a brush preview as well, showing where the brush will affect the terrain. The brush size can be adjusted with the + and - keys. This should use the GUI_manager node in the main scene to start building the GUI. - DONE?
 
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
 
+- Build my own profiler to replace the Godot built-in one, so I can get more detailed information about performance and memory usage for each funciton and integrate it with the debug overlay.
+
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
+
+---
 
 - Research algorithms to generate tessellating shapes as cells in the terrain using data driver attributes such as roughness, scale variance, and starting shape. Maybe voronoi diagrams & Lloyd's relaxation?
 

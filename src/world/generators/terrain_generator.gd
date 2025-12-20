@@ -31,11 +31,11 @@ func generate_chunk(chunk_pos: Vector2i) -> PackedByteArray:
 			var tile_id = 0
 			# Santize the value to be an int - solid is 1 air is 0
 			if value > 0.3:
-				tile_id = 3 # Stone
+				tile_id = TileIndex.STONE
 			elif value > 0.15:
-				tile_id = 1 # Dirt
+				tile_id = TileIndex.DIRT
 			elif value > 0.1:
-				tile_id = 2 # Grass
+				tile_id = TileIndex.GRASS
 			else:
 				tile_id = 0 # Air
 			

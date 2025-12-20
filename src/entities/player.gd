@@ -23,12 +23,12 @@ var _current_chunk: Vector2i = Vector2i.ZERO
 var _collision_detector: CollisionDetector = null
 var _is_on_floor: bool = false
 var _coyote_timer: float = 0.0
-var _chunk_manager_ref: ChunkManager = null
+var _chunk_manager: ChunkManager = null
 
 
 func setup_chunk_manager(chunk_manager: ChunkManager) -> void:
-	_chunk_manager_ref = chunk_manager
-	_collision_detector = CollisionDetector.new(_chunk_manager_ref)
+	_chunk_manager = chunk_manager
+	_collision_detector = CollisionDetector.new(_chunk_manager)
 
 
 func _ready() -> void:

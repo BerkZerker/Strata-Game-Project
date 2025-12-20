@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://bin23awxfegtc"]
+[gd_scene load_steps=5 format=3 uid="uid://c0tpt8xfasge3"]
 
 [ext_resource type="Script" uid="uid://ccxy6dtg7sy0x" path="res://src/game/game_instance.gd" id="1_btrx8"]
 [ext_resource type="PackedScene" uid="uid://dhjepimdy0621" path="res://src/entities/player.tscn" id="2_s6sj2"]
 [ext_resource type="PackedScene" uid="uid://t1pwf87mdupr" path="res://src/world/chunks/chunk_manager.tscn" id="3_c6sqd"]
+[ext_resource type="PackedScene" uid="uid://cfv2uagq51e7l" path="res://src/gui/gui_manager.tscn" id="4_s6sj2"]
 
 [node name="GameInstance" type="Node"]
 script = ExtResource("1_btrx8")
@@ -12,6 +13,6 @@ position = Vector2(94, -16)
 
 [node name="ChunkManager" parent="." instance=ExtResource("3_c6sqd")]
 
-[node name="GUIManager" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 0
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="GUIManager" parent="UILayer" instance=ExtResource("4_s6sj2")]
