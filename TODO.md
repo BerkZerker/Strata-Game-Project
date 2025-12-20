@@ -4,6 +4,8 @@
 
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
 
+- Check over all my recent edits with Claude & myself to make sure the AI generated code is up to my standards and refactor as needed before introducing integrated profiling and documentation.
+
 - Build my own profiler to replace the Godot built-in one, so I can get more detailed information about performance and memory usage for each funciton and integrate it with the debug overlay.
 
 - Update `README.md` and add some basic documentation and at least 1 screenshot - maybe once I have actual terrain working that isn't just simplex noise.
