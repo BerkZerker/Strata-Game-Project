@@ -1,8 +1,6 @@
-# TODO List
+# TODO
 
-- Add getters and setters for accessing terrain data in a thread-safe way - try and find the most efficient way to do this espically since terrain data access will be frequent and per-tile could be a bottleneck.
-
-- Re-implement basic editing. (This will require adding some editing functions to the chunk_manager class?)
+- Re-implement basic editing, using the new chunk data access methods. I should be able to the mouse and left click to edit terrain, with a simple gui to show different terrain types (air, dirt, stone, grass, etc) and a simple circle and square brushes to choose from. There should be a brush preview as well, showing where the brush will affect the terrain. The brush size can be adjusted with the + and - keys.
 
 - Clean up the debug overlay code and make it a bit more refined, add some debugging info to the main scene and add proper keybindings to toggle it in the project settings.
 
