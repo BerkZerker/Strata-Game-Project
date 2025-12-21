@@ -271,6 +271,75 @@ func get_tile_at_world_pos(world_pos: Vector2) -> Array:
 	return chunk.get_tile_at(tile_pos.x, tile_pos.y)
 
 
+# Retrieves terrain data for a list of world positions
+# Returns a dictionary: { Vector2(world_pos): [tile_id, cell_id] }
+func get_tiles_at_world_positions(world_positions: Array) -> Dictionary:
+	var result = {}
+	var batched_requests = {} # { chunk_pos: [ { "world_pos": Vector2, "tile_pos": Vector2i } ] }
+	
+	# Group requests by chunk
+	for world_pos in world_positions:
+		var chunk_pos = world_to_chunk_pos(world_pos)
+		if not batched_requests.has(chunk_pos):
+			batched_requests[chunk_pos] = []
+		
+		var tile_pos = world_to_tile_pos(world_pos)
+		batched_requests[chunk_pos].append({
+			"world_pos": world_pos,
+			"tile_pos": tile_pos
+		})
+	
+	# Process batches
+	for chunk_pos in batched_requests.keys():
+		var chunk = get_chunk_at(chunk_pos)
+		var requests = batched_requests[chunk_pos]
+		
+		if chunk == null:
+			# If chunk isn't loaded, return 0 (air) for all positions
+			for req in requests:
+				result[req["world_pos"]] = [0, 0]
+			continue
+			
+		# Access chunk data (locking happens inside chunk.get_tile_at, 
+		# but for critical performance we could add a bulk getter to Chunk too. 
+		# For now, this loop is "safe" but acquires lock per tile. 
+		# OPTIMIZATION: If needed, add `get_tiles(local_positions)` to Chunk.)
+		for req in requests:
+			var tp = req["tile_pos"]
+			result[req["world_pos"]] = chunk.get_tile_at(tp.x, tp.y)
+			
+	return result
+
+
+# Updates tiles at specific world positions
+# changes: Array of Dictionary { "pos": Vector2, "tile_id": int, "cell_id": int }
+func set_tiles_at_world_positions(changes: Array) -> void:
+	var batched_changes = {} # { chunk_pos: [ { "x": int, "y": int, "tile_id": int, "cell_id": int } ] }
+	
+	# Group changes by chunk
+	for change in changes:
+		var world_pos = change["pos"]
+		var chunk_pos = world_to_chunk_pos(world_pos)
+		
+		if not batched_changes.has(chunk_pos):
+			batched_changes[chunk_pos] = []
+			
+		var tile_pos = world_to_tile_pos(world_pos)
+		
+		batched_changes[chunk_pos].append({
+			"x": tile_pos.x,
+			"y": tile_pos.y,
+			"tile_id": change["tile_id"],
+			"cell_id": change["cell_id"]
+		})
+	
+	# Dispatch batches to chunks
+	for chunk_pos in batched_changes.keys():
+		var chunk = get_chunk_at(chunk_pos)
+		if chunk != null:
+			chunk.edit_tiles(batched_changes[chunk_pos])
+
+
 # Cleanup on exit
 func _exit_tree() -> void:
 	if _chunk_loader:

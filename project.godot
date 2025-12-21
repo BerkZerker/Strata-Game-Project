@@ -11,19 +11,21 @@ config_version=5
 [application]
 
 config/name="Substrata"
-run/main_scene="uid://bin23awxfegtc"
+run/main_scene="uid://c0tpt8xfasge3"
 config/features=PackedStringArray("4.5")
 
 [autoload]
 
 SignalBus="*res://src/globals/signal_bus.gd"
 GlobalSettings="*res://src/globals/global_settings.gd"
+TileIndex="*res://src/globals/tile_index.gd"
 
 [display]
 
 window/size/viewport_width=960
 window/size/viewport_height=540
 window/stretch/aspect="expand"
+window/vsync/vsync_mode=0
 
 [input]
 
